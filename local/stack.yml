@@ -2,35 +2,52 @@
 # Nicht direkt deployen, sondern über ./deploy.sh – das Skript prüft die Pins,
 # legt fehlende Secrets an und setzt die Config-Namen (Swarm-Configs sind
 # unveränderlich, deshalb steckt ein Hash des Inhalts im Namen).
+#
+# Variablen wie ${LITELLM_IMAGE} setzt deploy.sh aus images.env, bevor
+# `docker stack deploy` die Datei liest.
 
 services:
+  # -------------------------------------------------------------------------
+  # Service litellm – das Gateway
+  # Nimmt Anfragen von OpenWebUI und den Testskripten an (Port 4000), prüft
+  # den Master-Key und leitet an das Ziel weiter (jetzt: Mock, ab Phase 4:
+  # vLLM im RunPod-Pod).
+  # -------------------------------------------------------------------------
   litellm:
+    # Image per Digest gepinnt (Regel 4), Wert aus images.env
     image: ${LITELLM_IMAGE}
+    # Statt des Standard-Starts läuft unser start.sh: lädt die Secrets als
+    # Umgebungsvariablen und startet dann LiteLLM
     entrypoint: ["/bin/sh", "/usr/local/bin/start-litellm.sh"]
     command: []
+    # Dateien, die Swarm in den Container legt (Inhalt aus dem Repo)
     configs:
       - source: litellm_config
         target: /etc/litellm/config.yaml
       - source: litellm_start
         target: /usr/local/bin/start-litellm.sh
         mode: 0555
+    # Zugangsdaten als Dateien unter /run/secrets/ (nur im Arbeitsspeicher)
     secrets:
       - litellm_master_key
       - mock_api_key
+    # Modus "host": Port direkt am Mediaserver, ohne Swarm-Routing-Mesh.
+    # Die bestehende OpenWebUI erreicht LiteLLM über die LAN-IP:4000.
     ports:
-      # Modus "host": Port direkt am Mediaserver, ohne Swarm-Routing-Mesh.
-      # Die bestehende OpenWebUI erreicht LiteLLM über die LAN-IP:4000.
       - target: 4000
         published: 4000
         protocol: tcp
         mode: host
     networks: [llm]
+    # Gesundheitsprüfung im Container; erst "healthy" zählt als bereit.
+    # start_period gibt LiteLLM 90 s zum Hochfahren, bevor Fehlschläge zählen.
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=5)"]
       interval: 15s
       timeout: 8s
       retries: 5
       start_period: 90s
+    # Betrieb: ein Container, bei jedem Absturz Neustart nach 5 s
     deploy:
       replicas: 1
       restart_policy:
@@ -42,10 +59,17 @@ services:
         limits:
           memory: 2g
 
+  # -------------------------------------------------------------------------
+  # Service mock – Ersatz für vLLM, ohne GPU
+  # Ahmt die OpenAI-API nach. Nur im Overlay-Netz erreichbar (kein Port nach
+  # außen) und wie vLLM per API-Key geschützt.
+  # -------------------------------------------------------------------------
   mock:
     image: ${LITELLM_IMAGE} # gleiches Image, bringt Python mit – ein Pin weniger
+    # Startet unser Mock-Skript statt LiteLLM
     entrypoint: ["python", "/opt/mock/mock_openai.py"]
     command: ["--host", "0.0.0.0", "--port", "8000"]
+    # Verhalten des Mocks: Key aus dem Secret, Antwort mit Denk-Text
     environment:
       MOCK_API_KEY_FILE: /run/secrets/mock_api_key
       MOCK_REASONING: "1"
@@ -70,6 +94,11 @@ services:
         limits:
           memory: 256m
 
+# ---------------------------------------------------------------------------
+# Configs – Dateien aus dem Repo, die Swarm an die Services verteilt.
+# Der Name enthält einen Hash des Inhalts (setzt deploy.sh), damit eine
+# geänderte Datei als neue Config ankommt.
+# ---------------------------------------------------------------------------
 configs:
   litellm_config:
     name: litellm-config-${LITELLM_CONFIG_HASH}
@@ -81,12 +110,21 @@ configs:
     name: mock-script-${MOCK_SCRIPT_HASH}
     file: ./mock/mock_openai.py
 
+# ---------------------------------------------------------------------------
+# Secrets – liegen verschlüsselt im Swarm, nicht im Repo.
+# "external": werden außerhalb des Stacks angelegt (macht deploy.sh).
+# ---------------------------------------------------------------------------
 secrets:
   litellm_master_key:
     external: true
   mock_api_key:
     external: true
 
+# ---------------------------------------------------------------------------
+# Netz – Overlay-Netz nur für diesen Stack. Darin findet LiteLLM den Mock
+# unter dem Namen "mock". "attachable" erlaubt später, auch normale Container
+# (z. B. OpenWebUI) in dieses Netz zu hängen.
+# ---------------------------------------------------------------------------
 networks:
   llm:
     driver: overlay

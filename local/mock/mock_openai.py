@@ -37,6 +37,11 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
+# ---------------------------------------------------------------------------
+# Einstellungen aus Umgebungsvariablen (siehe Liste im Kopf der Datei).
+# Der API-Key kommt bevorzugt aus einer Datei, damit er als Docker Secret
+# übergeben werden kann und nicht in der Stack-Definition steht.
+# ---------------------------------------------------------------------------
 def lies_api_key() -> str:
     """Key aus MOCK_API_KEY oder aus der Datei in MOCK_API_KEY_FILE (Docker Secret)."""
     datei = os.environ.get("MOCK_API_KEY_FILE", "")
@@ -56,6 +61,10 @@ MIT_DENKEN = os.environ.get("MOCK_REASONING", "") == "1"
 WOERTER = ["Das", "ist", "eine", "Antwort", "des", "Mock-Servers", "ohne", "GPU"]
 
 
+# ---------------------------------------------------------------------------
+# Hilfsfunktionen: Prompt-Länge schätzen, Antwort erzeugen, Tool-Call erkennen.
+# Kein echtes Modell – nur so viel Logik, dass Tests das Verhalten prüfen können.
+# ---------------------------------------------------------------------------
 def schaetze_tokens(text: str) -> int:
     """Grobe Schätzung wie bei vielen Tokenizern: etwa 4 Zeichen pro Token."""
     return max(1, len(text) // 4)
@@ -82,6 +91,11 @@ def soll_tool_rufen(anfrage: dict) -> bool:
     return bool(nutzer) and "tool" in prompt_text(nutzer[-1:]).lower()
 
 
+# ---------------------------------------------------------------------------
+# HTTP-Handler: beantwortet jede eingehende Anfrage.
+# Aufbau: Hilfen (JSON senden, Fehler, Key prüfen) -> Endpunkte (GET/POST)
+# -> Antwortformen (komplett oder gestreamt).
+# ---------------------------------------------------------------------------
 class Handler(BaseHTTPRequestHandler):
     server_version = "MockOpenAI/1.0"
     protocol_version = "HTTP/1.1"
@@ -149,6 +163,9 @@ class Handler(BaseHTTPRequestHandler):
             self._komplett(anfrage, prompt_tokens, tokens)
 
     # --- Antwortformen ----------------------------------------------------
+    # _komplett: eine einzige JSON-Antwort (wie "stream": false)
+    # _stream:   viele kleine Stücke als Server-Sent Events, jedes beginnt mit
+    #            "data: ", am Ende "data: [DONE]" (wie "stream": true)
     def _basis(self) -> dict:
         return {"id": f"chatcmpl-{uuid.uuid4().hex[:24]}", "created": int(time.time()), "model": MODELL}
 
@@ -229,6 +246,10 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
 
+# ---------------------------------------------------------------------------
+# Hauptprogramm: Server starten. ThreadingHTTPServer bearbeitet jede Anfrage in
+# einem eigenen Thread, damit parallele Anfragen (Lasttests) nicht warten.
+# ---------------------------------------------------------------------------
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--host", default="0.0.0.0")  # noqa: S104 (im Container gewollt, nur im Overlay-Netz erreichbar)

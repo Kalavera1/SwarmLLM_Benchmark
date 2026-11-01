@@ -15,6 +15,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# ---------------------------------------------------------------------------
+# Grundlagen: Stack-Name und eine Fehlerfunktion, die mit Meldung abbricht
+# ---------------------------------------------------------------------------
 STACK=llm
 
 fehler() {
@@ -22,11 +25,16 @@ fehler() {
   exit 1
 }
 
-# 1. Swarm aktiv?
+# ---------------------------------------------------------------------------
+# 1. Swarm aktiv? Ohne Swarm-Modus gibt es kein "docker stack deploy".
+# ---------------------------------------------------------------------------
 [[ "$(docker info --format '{{.Swarm.LocalNodeState}}')" == "active" ]] \
   || fehler "Swarm ist nicht aktiv. Einmalig ausführen: docker swarm init --advertise-addr <LAN-IP des Mediaservers>"
 
-# 2. Gepinntes Image
+# ---------------------------------------------------------------------------
+# 2. Gepinntes Image (Regel 4): images.env laden; "set -a" exportiert alle
+#    Variablen daraus, damit docker stack deploy sie in stack.yml einsetzt.
+# ---------------------------------------------------------------------------
 set -a
 # shellcheck source=local/images.env
 source ./images.env
@@ -34,7 +42,10 @@ set +a
 [[ "${LITELLM_IMAGE:-}" =~ @sha256:[0-9a-f]{64}$ ]] \
   || fehler "LITELLM_IMAGE in images.env ist nicht per Digest gepinnt. Zuerst ./pin-images.sh ausführen."
 
-# 3. Secrets
+# ---------------------------------------------------------------------------
+# 3. Secrets anlegen, falls sie fehlen. Bestehende Secrets bleiben unverändert
+#    (Swarm-Secrets lassen sich nicht überschreiben, nur löschen und neu anlegen).
+# ---------------------------------------------------------------------------
 secret_fehlt() { ! docker secret inspect "$1" >/dev/null 2>&1; }
 
 if secret_fehlt litellm_master_key; then
@@ -51,14 +62,20 @@ if secret_fehlt mock_api_key; then
   echo "Secret mock_api_key angelegt (zufällig)."
 fi
 
-# 4. Config-Hashes
+# ---------------------------------------------------------------------------
+# 4. Config-Hashes: die ersten 12 Zeichen des SHA-256 jeder Datei. Ändert
+#    sich eine Datei, ändert sich der Config-Name, und Swarm verteilt sie neu.
+# ---------------------------------------------------------------------------
 hash12() { sha256sum "$1" | cut -c1-12; }
 LITELLM_CONFIG_HASH=$(hash12 litellm/config.yaml)
 LITELLM_START_HASH=$(hash12 litellm/start.sh)
 MOCK_SCRIPT_HASH=$(hash12 mock/mock_openai.py)
 export LITELLM_CONFIG_HASH LITELLM_START_HASH MOCK_SCRIPT_HASH
 
-# 5. Deploy und warten
+# ---------------------------------------------------------------------------
+# 5. Deploy und warten, bis beide Container als "healthy" gemeldet werden.
+#    --prune entfernt Services, die nicht mehr in stack.yml stehen.
+# ---------------------------------------------------------------------------
 docker stack deploy --prune -c stack.yml "$STACK"
 
 echo "Warte, bis die Services gesund sind (max. 5 Min.) ..."

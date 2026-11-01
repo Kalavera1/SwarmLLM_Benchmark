@@ -7,9 +7,16 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# ---------------------------------------------------------------------------
+# Eingabe: welches Image in welcher Version
+# ---------------------------------------------------------------------------
 TAG="${1:-v1.106.6}"
 REPO="ghcr.io/berriai/litellm"
 
+# ---------------------------------------------------------------------------
+# Image laden und Digest auslesen. Der Digest ist der Hash, den die Registry
+# für genau dieses Image liefert – anders als der Tag kann er nicht wandern.
+# ---------------------------------------------------------------------------
 echo "Lade ${REPO}:${TAG} ..."
 docker pull "${REPO}:${TAG}" >/dev/null
 DIGEST=$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "${REPO}:${TAG}" \
@@ -20,6 +27,9 @@ if [[ ! "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]; then
   exit 1
 fi
 
+# ---------------------------------------------------------------------------
+# Pin eintragen: Tag bleibt zur Lesbarkeit stehen, entscheidend ist @sha256
+# ---------------------------------------------------------------------------
 PIN="${REPO}:${TAG}@${DIGEST}"
 sed -i "s|^LITELLM_IMAGE=.*|LITELLM_IMAGE=${PIN}|" images.env
 echo "Gepinnt in images.env:"
