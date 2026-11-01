@@ -1,0 +1,27 @@
+# Konfiguration für ruff (Python-Linter und -Formatierer).
+
+# ---------------------------------------------------------------------------
+# Grundeinstellungen: Python-Version und maximale Zeilenlänge
+# ---------------------------------------------------------------------------
+target-version = "py312"
+line-length = 120
+
+# ---------------------------------------------------------------------------
+# Aktive Regelgruppen
+#   E, W  Stil (pycodestyle)      F    Fehler wie ungenutzte Importe (pyflakes)
+#   I     Import-Reihenfolge      B    typische Bugs (bugbear)
+#   UP    moderne Python-Syntax   S    Sicherheit (bandit)
+#   SIM   Vereinfachungen
+# ---------------------------------------------------------------------------
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM"]
+ignore = [
+    "S603", # subprocess ohne shell=True ist hier gewollt
+    "S607", # git wird über PATH gefunden
+]
+
+# ---------------------------------------------------------------------------
+# Ausnahmen pro Datei: In Tests ist assert erlaubt (S101 würde es melden).
+# ---------------------------------------------------------------------------
+[lint.per-file-ignores]
+"**/test_*.py" = ["S101"]
