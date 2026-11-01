@@ -1,6 +1,4 @@
-# vllm-rtxpro-bench
-
-> Arbeitstitel – Name kann beim Anlegen des Repos frei gewählt werden.
+# SwarmLLM_Benchmark
 
 Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× NVIDIA RTX PRO 6000 Blackwell** (je 96 GB, SM120, kein NVLink) betreiben, vergleichen und vermessen – mit **LiteLLM** als Gateway und **OpenWebUI** als Frontend.
 
