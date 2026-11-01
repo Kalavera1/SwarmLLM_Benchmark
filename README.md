@@ -10,7 +10,7 @@ Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× N
 
 ## Regeln
 
-1. **Strikt getrennt vom beruflichen Stack.** Kein Code, keine Configs, keine Zugangsdaten, keine Actions-Runner von dort. Nur der private GitHub-Account.
+1. **Strikt isoliert. Kein Bezug zu anderen Stackprojekten.** Kein Code, keine Configs, keine Zugangsdaten, keine Actions-Runner von Konfliktparteien.
 2. **Keine Secrets im Repo.** Zugangsdaten für Skripte nur in `.env` (steht in `.gitignore`, Vorlage: `.env.example`). Zugangsdaten für den lokalen Stack als Docker Secrets.
 3. **Keine Gewichte, Caches oder Container-Layer im Repo.**
 4. **Alles gepinnt.** Container-Images per Digest (`@sha256:…`), Checkpoints per Revision (Commit-Hash). Nie wandernde Tags wie `latest` oder `-beta`.
