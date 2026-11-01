@@ -23,9 +23,11 @@ Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder P
 
 ## Phase 1 – Lokaler Stack
 
-**Ergebnis:** `local/` mit einem Docker-Swarm-Stack (Single-Node in WSL) für LiteLLM, OpenWebUI und einen Mock-Server, der die OpenAI-API nachahmt – noch keine GPU. Der LiteLLM-Master-Key liegt als Docker Secret vor, nicht in einer Datei im Repo.
+**Ergebnis:** `local/` mit einem Docker-Swarm-Stack (Single-Node auf dem Mediaserver) für LiteLLM und einen Mock-Server, der die OpenAI-API nachahmt – noch keine GPU. Der LiteLLM-Master-Key liegt als Docker Secret vor, nicht in einer Datei im Repo. Die bestehende OpenWebUI (Port 8081, Compose) bleibt unverändert und bekommt LiteLLM nur als zusätzliche OpenAI-Verbindung.
 
-**Fertig, wenn:** `docker stack deploy` läuft durch, alle Services sind gesund, und ein Chat in OpenWebUI geht über LiteLLM zum Mock und zurück.
+**Wichtig:** Aus dem OpenWebUI-Container heißt `localhost` der Container selbst, nicht der Mediaserver. Die Verbindung geht deshalb über die LAN-IP des Mediaservers oder `host.docker.internal`.
+
+**Fertig, wenn:** `docker stack deploy` läuft durch, alle Services sind gesund, und ein Chat in der bestehenden OpenWebUI geht über LiteLLM zum Mock und zurück.
 
 ## Phase 2 – Benchmark-Skripte
 

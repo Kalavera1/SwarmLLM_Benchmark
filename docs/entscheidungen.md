@@ -16,14 +16,15 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ## 2026-11-01 – Lokaler Stack als Docker Swarm statt Docker Compose
 
-**Entscheidung:** LiteLLM, OpenWebUI und der Mock-Server laufen lokal in WSL als Swarm-Stack (`docker stack deploy`), zunächst auf einem einzigen Node.
+**Entscheidung:** LiteLLM und der Mock-Server laufen als Swarm-Stack (`docker stack deploy`) auf dem Mediaserver (Linux), zunächst auf einem einzigen Node. Die bestehende OpenWebUI dort (Port 8081, Compose) wird weiter genutzt und nur um LiteLLM als Verbindung ergänzt. Der PC mit WSL dient zum Entwickeln und Reviewen; die zweite OpenWebUI dort (Port 3000) bleibt unberührt.
 
-**Warum:** Native Docker Secrets für Zugangsdaten, Healthchecks mit automatischem Neustart, und das Stack-File kann später auf weitere Nodes wachsen.
+**Warum:** Native Docker Secrets für Zugangsdaten, Healthchecks mit automatischem Neustart, und das Stack-File kann später auf weitere Nodes wachsen. Der Mediaserver läuft dauerhaft und hostet die OpenWebUI, die tatsächlich genutzt wird; aus WSL heraus wäre LiteLLM für andere Rechner wegen des WSL2-NAT nur mit Zusatzaufwand erreichbar.
 
 **Folgen:**
+- Swarm und die bestehenden Compose-Container laufen auf demselben Docker-Daemon nebeneinander. `docker swarm init` ändert an den Compose-Containern nichts.
 - `docker stack deploy` liest keine `.env`-Datei automatisch. Zugangsdaten des Stacks kommen als Docker Secrets, die `.env` bleibt für die Skripte (RunPod, Hugging Face).
 - Compose-Felder wie `build`, `container_name` und `depends_on` werden von Swarm ignoriert. Es werden nur fertige, gepinnte Images verwendet.
-- Swarm umfasst nur die lokale Seite. Der RunPod-Pod kann kein Swarm-Node werden: kein Docker im Pod, und Swarm braucht UDP, das RunPod nicht unterstützt.
+- Swarm umfasst nur den Mediaserver. Der RunPod-Pod kann kein Swarm-Node werden: kein Docker im Pod, und Swarm braucht UDP, das RunPod nicht unterstützt.
 
 ## 2026-10-31 – GLM-5.3-Flash über die Runtime von T.J. Purtell, Profil `k3`
 

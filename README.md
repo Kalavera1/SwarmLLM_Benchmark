@@ -22,22 +22,25 @@ Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× N
 ## Architektur
 
 ```
- Lokal (WSL, Docker Swarm)               RunPod (nur während Messläufen)
+ Mediaserver (Linux)                     RunPod (nur während Messläufen)
 ┌──────────────────────────┐            ┌──────────────────────────────────┐
-│ OpenWebUI                │            │ Pod: 2× RTX PRO 6000             │
-│     │                    │ SSH-Tunnel │                                  │
-│     ▼                    │ / TCP-Port │  vLLM-Image direkt als Pod-Image │
-│ LiteLLM (Gateway, Keys) ─┼───────────►│  (OpenAI-API, mit API-Key)       │
-│                          │            │                                  │
-│ Benchmark-Skripte ───────┼───────────►│  Gewichte + Caches auf           │
-└──────────────────────────┘            │  Network Volume                  │
-                                        └──────────────────────────────────┘
+│ OpenWebUI :8081          │            │ Pod: 2× RTX PRO 6000             │
+│ (bestehend, Compose)     │            │                                  │
+│     │                    │ SSH-Tunnel │  vLLM-Image direkt als Pod-Image │
+│     ▼                    │ / TCP-Port │  (OpenAI-API, mit API-Key)       │
+│ LiteLLM :4000 (Swarm) ───┼───────────►│                                  │
+│                          │            │  Gewichte + Caches auf           │
+│ Benchmark-Skripte ───────┼───────────►│  Network Volume                  │
+└──────────────────────────┘            └──────────────────────────────────┘
+
+ PC mit WSL: Entwicklung und Review (git), kein Dauerbetrieb
 ```
 
 - **Warum das vLLM-Image direkt als Pod-Image?** In RunPod-Pods ist kein eigenes Docker und kein Docker Compose möglich. Konfiguration läuft über Umgebungsvariablen und das Startkommando.
-- **Warum LiteLLM und OpenWebUI lokal?** Sie brauchen keine GPU, und die vLLM-API ist ohne Authentifizierung – LiteLLM kommt als abgesichertes Gateway davor.
+- **Warum auf dem Mediaserver?** Dort läuft die OpenWebUI, die tatsächlich genutzt wird, und der Rechner ist dauerhaft an. In WSL wäre LiteLLM für andere Rechner nur mit zusätzlicher Netzwerk-Einrichtung erreichbar (WSL2 hängt hinter eigenem NAT).
+- **Warum LiteLLM als Gateway?** Die bestehende OpenWebUI bekommt einmalig LiteLLM als Verbindung. Pro Testlauf ändert sich nur das Ziel in LiteLLM (Mock, aktueller Pod, später andere Modelle) – OpenWebUI muss dafür nie umkonfiguriert oder neu gestartet werden. Zusätzlich verwaltet LiteLLM die Keys, sodass der vLLM-Key nie in OpenWebUI landet.
 - **Warum nicht über den RunPod-HTTP-Proxy?** Er trennt stille Verbindungen nach ca. 2 Minuten. Ein kalter 1M-Prompt dauert auf dieser Hardware länger (siehe [Erfahrungen](docs/erfahrungen.md)).
-- **Warum Docker Swarm?** Native Secrets, Healthchecks mit automatischem Neustart und ein Stack-File, das später auf weitere Nodes wachsen kann. Swarm umfasst nur die lokale Seite: Der RunPod-Pod kann kein Swarm-Node werden (kein Docker im Pod, kein UDP).
+- **Warum Docker Swarm?** Native Secrets, Healthchecks mit automatischem Neustart und ein Stack-File, das später auf weitere Nodes wachsen kann. Swarm umfasst nur den Mediaserver: Der RunPod-Pod kann kein Swarm-Node werden (kein Docker im Pod, kein UDP). Die bestehende OpenWebUI bleibt unverändert in Compose.
 
 ## Modell-Kandidaten
 
@@ -67,7 +70,7 @@ Ordner entstehen erst in der Phase, in der sie gebraucht werden.
 │   ├── roadmap.md      Phasen, Ergebnisse, Review-Kriterien
 │   ├── entscheidungen.md
 │   └── erfahrungen.md  Lehren aus früheren Tests
-├── local/              Phase 1: Swarm-Stack mit LiteLLM + OpenWebUI
+├── local/              Phase 1: Swarm-Stack mit LiteLLM + Mock-Server
 ├── bench/              Phase 2: Benchmark-Skripte
 ├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen
 ├── profiles/           Phase 4+: ein Ordner pro Modell
