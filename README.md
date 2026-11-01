@@ -19,6 +19,7 @@ Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× N
 5. **Kein GPU-Lauf ohne Auto-Stopp.** Jeder Pod bekommt einen Watchdog, damit keiner vergessen wird.
 6. **Ergebnisse sind nachvollziehbar.** Jede Messung speichert Datum, Image-Digest, Checkpoint-Revision, Startparameter und Hardware.
 7. **Schrittweise.** Jede Phase endet mit einem Review, bevor die nächste beginnt (siehe [Roadmap](docs/roadmap.md)).
+8. **Nie ein offener Endpunkt.** vLLM läuft immer mit `VLLM_API_KEY`. Jeder Pod-Check prüft, dass eine Anfrage ohne Key abgewiesen wird.
 
 ## Architektur
 
@@ -26,9 +27,9 @@ Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× N
  Lokal (WSL, Docker Swarm)               RunPod (nur während Messläufen)
 ┌──────────────────────────┐            ┌──────────────────────────────────┐
 │ OpenWebUI                │            │ Pod: 2× RTX PRO 6000             │
-│     │                    │   HTTPS /  │                                  │
-│     ▼                    │ SSH-Tunnel │  vLLM-Image direkt als Pod-Image │
-│ LiteLLM (Gateway, Keys) ─┼───────────►│  (OpenAI-kompatible API)         │
+│     │                    │ SSH-Tunnel │                                  │
+│     ▼                    │ / TCP-Port │  vLLM-Image direkt als Pod-Image │
+│ LiteLLM (Gateway, Keys) ─┼───────────►│  (OpenAI-API, mit API-Key)       │
 │                          │            │                                  │
 │ Benchmark-Skripte ───────┼───────────►│  Gewichte + Caches auf           │
 └──────────────────────────┘            │  Network Volume                  │
@@ -37,6 +38,7 @@ Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× N
 
 - **Warum das vLLM-Image direkt als Pod-Image?** In RunPod-Pods ist kein eigenes Docker und kein Docker Compose möglich. Konfiguration läuft über Umgebungsvariablen und das Startkommando.
 - **Warum LiteLLM und OpenWebUI lokal?** Sie brauchen keine GPU, und die vLLM-API ist ohne Authentifizierung – LiteLLM kommt als abgesichertes Gateway davor.
+- **Warum nicht über den RunPod-HTTP-Proxy?** Er trennt stille Verbindungen nach ca. 2 Minuten. Ein kalter 1M-Prompt dauert auf dieser Hardware länger (siehe [Erfahrungen](docs/erfahrungen.md)).
 - **Warum Docker Swarm?** Native Secrets, Healthchecks mit automatischem Neustart und ein Stack-File, das später auf weitere Nodes wachsen kann. Swarm umfasst nur die lokale Seite: Der RunPod-Pod kann kein Swarm-Node werden (kein Docker im Pod, kein UDP).
 
 ## Modell-Kandidaten
@@ -65,7 +67,8 @@ Ordner entstehen erst in der Phase, in der sie gebraucht werden.
 ├── .env.example        Vorlage für Zugangsdaten (echte Werte nur in .env)
 ├── docs/
 │   ├── roadmap.md      Phasen, Ergebnisse, Review-Kriterien
-│   └── entscheidungen.md
+│   ├── entscheidungen.md
+│   └── erfahrungen.md  Lehren aus früheren Tests
 ├── local/              Phase 1: Swarm-Stack mit LiteLLM + OpenWebUI
 ├── bench/              Phase 2: Benchmark-Skripte
 ├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen

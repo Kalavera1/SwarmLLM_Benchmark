@@ -4,6 +4,16 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-01 – Lange Prompts nicht über den RunPod-HTTP-Proxy
+
+**Entscheidung:** LiteLLM und die Benchmark-Skripte erreichen vLLM per SSH-Tunnel oder über einen direkt freigegebenen TCP-Port. Der HTTP-Proxy (`<pod-id>-8000.proxy.runpod.net`) dient höchstens für kurze Funktionstests.
+
+**Warum:** Im B300-Test vom 01.10.2026 trennte der Proxy stille Verbindungen nach ca. 2 Minuten. Ein kalter 1M-Prompt braucht auf 2× RTX PRO 6000 bei GLM-5.3-Flash ca. 4,5–5 Minuten bis zum ersten Token, ein 500k-Prompt etwa 2 Minuten.
+
+**Offen:** Ob der direkte TCP-Port auf dem gewählten RunPod-Host eine öffentliche IP bekommt – wird in Phase 4 geprüft.
+
+**Quelle:** [Erfahrungen](erfahrungen.md)
+
 ## 2026-11-01 – Lokaler Stack als Docker Swarm statt Docker Compose
 
 **Entscheidung:** LiteLLM, OpenWebUI und der Mock-Server laufen lokal in WSL als Swarm-Stack (`docker stack deploy`), zunächst auf einem einzigen Node.

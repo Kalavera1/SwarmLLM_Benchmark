@@ -1,6 +1,6 @@
 # Roadmap
 
-Jede Phase endet mit einem Review. Erst danach beginnt die nächste.
+Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder Phase die [Erfahrungen](erfahrungen.md) durchsehen.
 
 | Phase | Ziel | Kosten | Status |
 |---|---|---|---|
@@ -36,7 +36,10 @@ Jede Phase endet mit einem Review. Erst danach beginnt die nächste.
 - Lastmix: 4 Coding-Agenten mit wachsendem Kontext plus 8–10 Chat-Nutzer
 - Prefix-Caching: Folgeanfrage warm gegen kalt
 
-Jedes Skript schreibt ein JSON mit Messwerten und Metadaten.
+Jedes Skript schreibt ein JSON mit Messwerten und Metadaten. Aus dem B300-Test:
+- eigener User-Agent (der RunPod-Proxy blockt `Python-urllib`)
+- Aufwärmrunde vor jeder Messung, nicht mitgezählt
+- `max_tokens` ≥ 32k, Denk-Tokens getrennt erfasst, Denktiefe als Parameter
 
 **Fertig, wenn:** Alle Skripte laufen gegen den Mock und erzeugen gültiges JSON.
 
@@ -52,8 +55,10 @@ Jedes Skript schreibt ein JSON mit Messwerten und Metadaten.
 - `nvidia-smi topo -m` und P2P-Test zwischen beiden Karten
 - System-RAM und `/dev/shm`
 - DeepSeek V4 Flash startet, eine Testanfrage läuft
+- Richtiges Modell geladen (nicht das vLLM-Standardmodell) und Anfrage ohne API-Key wird abgewiesen
+- Verbindung per SSH-Tunnel oder direktem TCP-Port statt HTTP-Proxy; eine Anfrage mit über 2 Min. Prefill kommt vollständig an
 - Kaltstartzeit gemessen
-- Watchdog löscht den Pod zuverlässig
+- Watchdog löscht den Pod zuverlässig (terminieren, nicht nur stoppen)
 
 **Wichtig:** Funktioniert P2P auf dem Host nicht, wird der Pod gelöscht und ein anderer Host gewählt. `NCCL_P2P_DISABLE=1` ist nur Notausgang, weil es Leistung kostet.
 
@@ -77,4 +82,4 @@ Jedes Skript schreibt ein JSON mit Messwerten und Metadaten.
 
 ## Phase 7 – Auswertung
 
-**Ergebnis:** Vergleichstabelle, Kosten pro Lauf, Empfehlung, ob und welches Modell für den produktiven Einsatz taugt. Optional: Qwen3.8-Flash-Next nachziehen.
+**Ergebnis:** Vergleichstabelle, Kosten pro Lauf, Empfehlung, ob und welches Modell für den produktiven Einsatz taugt. Als Referenz dient der B300-Test vom 01.10.2026 (1 Karte, ca. 8 $/h, deutlich schnellerer Prefill). Optional: Qwen3.8-Flash-Next nachziehen.
