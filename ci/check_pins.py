@@ -23,18 +23,41 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# Muster: woran ein korrekter Pin zu erkennen ist
+#   DIGEST      @sha256: gefolgt von genau 64 Hex-Zeichen
+#   COMMIT_SHA  genau 40 Hex-Zeichen (voller Git-Commit-Hash)
+# ---------------------------------------------------------------------------
 DIGEST = re.compile(r"@sha256:[0-9a-f]{64}\b")
 COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 
+# ---------------------------------------------------------------------------
+# Muster: welche Zeilen überhaupt geprüft werden
+#   YAML_IMAGE   "image: <ref>" in Stack- oder Compose-Dateien
+#   VAR_IMAGE    "<NAME>IMAGE=<ref>" in Shell- und .env-Dateien, auch mit export
+#   USES         "uses: <action>@<version>" in GitHub-Workflows
+#   PROFILE_VAR  MODEL_ID und MODEL_REVISION in Modell-Profilen
+# Die benannte Gruppe "ref" bzw. "val" fängt den Wert hinter dem Schlüssel.
+# ---------------------------------------------------------------------------
 YAML_IMAGE = re.compile(r"^\s*-?\s*image:\s*[\"']?(?P<ref>[^\"'\s#]+)")
 VAR_IMAGE = re.compile(r"^\s*(?:export\s+)?(?P<name>[A-Z0-9_]*IMAGE)\s*=\s*[\"']?(?P<ref>[^\"'\s#]*)")
 USES = re.compile(r"^\s*-?\s*uses:\s*[\"']?(?P<ref>[^\"'\s#]+)")
 PROFILE_VAR = re.compile(r"^\s*(?:export\s+)?(?P<name>MODEL_ID|MODEL_REVISION)\s*=\s*[\"']?(?P<val>[^\"'\s#]*)")
 
+# ---------------------------------------------------------------------------
+# Einstellungen
+#   IGNORE_MARKER     bewusste Ausnahme, muss in der Zeile sichtbar stehen
+#   CHECKED_SUFFIXES  Dateiendungen, die geprüft werden ("" = ohne Endung,
+#                     z. B. Skripte); Markdown fehlt absichtlich
+# ---------------------------------------------------------------------------
 IGNORE_MARKER = "pin-check: ignore"
 CHECKED_SUFFIXES = {".yml", ".yaml", ".env", ".sh", ".toml", ".conf", ""}
 
 
+# ---------------------------------------------------------------------------
+# Ergebnis: ein Verstoß mit Datei, Zeilennummer und Meldung
+# Ausgabe im Format "datei:zeile: meldung", das Editoren anklickbar machen.
+# ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Verstoss:
     datei: str
@@ -45,6 +68,11 @@ class Verstoss:
         return f"{self.datei}:{self.zeile}: {self.text}"
 
 
+# ---------------------------------------------------------------------------
+# Prüflogik für eine Datei
+# Bekommt Dateiname und Zeilen, liefert die Liste der Verstöße. Liest selbst
+# keine Dateien – deshalb lässt sie sich mit künstlichen Zeilen testen.
+# ---------------------------------------------------------------------------
 def ist_variablen_referenz(ref: str) -> bool:
     """`${IMAGE}` oder `$IMAGE` wird an anderer Stelle gesetzt und dort geprüft."""
     return ref.startswith("$")
@@ -56,9 +84,11 @@ def pruefe_zeilen(datei: str, zeilen: list[str]) -> list[Verstoss]:
     profil_werte: dict[str, tuple[int, str]] = {}
 
     for nr, zeile in enumerate(zeilen, start=1):
+        # Ausnahmen: markierte Zeilen und Kommentare
         if IGNORE_MARKER in zeile or zeile.lstrip().startswith("#"):
             continue
 
+        # Images (YAML und Variablen) brauchen einen Digest
         for muster in (YAML_IMAGE, VAR_IMAGE):
             treffer = muster.match(zeile)
             if not treffer:
@@ -69,6 +99,7 @@ def pruefe_zeilen(datei: str, zeilen: list[str]) -> list[Verstoss]:
             if not DIGEST.search(ref):
                 verstoesse.append(Verstoss(datei, nr, f"Image nicht per Digest gepinnt: {ref}"))
 
+        # Actions brauchen einen vollen Commit-SHA (lokale Actions ausgenommen)
         treffer = USES.match(zeile)
         if treffer:
             ref = treffer.group("ref")
@@ -77,11 +108,13 @@ def pruefe_zeilen(datei: str, zeilen: list[str]) -> list[Verstoss]:
                 if not COMMIT_SHA.match(version):
                     verstoesse.append(Verstoss(datei, nr, f"Action nicht per Commit-SHA gepinnt: {ref}"))
 
+        # Modell-Profile: Werte erst sammeln, Bewertung nach der Schleife
         if ist_profil:
             treffer = PROFILE_VAR.match(zeile)
             if treffer:
                 profil_werte[treffer.group("name")] = (nr, treffer.group("val"))
 
+    # Modell-Profile: MODEL_ID verlangt eine MODEL_REVISION als Commit-Hash
     if ist_profil and "MODEL_ID" in profil_werte:
         nr_id, _ = profil_werte["MODEL_ID"]
         if "MODEL_REVISION" not in profil_werte:
@@ -96,6 +129,11 @@ def pruefe_zeilen(datei: str, zeilen: list[str]) -> list[Verstoss]:
     return verstoesse
 
 
+# ---------------------------------------------------------------------------
+# Dateiauswahl
+# Geprüft werden nur Dateien, die Git verfolgt – also genau das, was ins Repo
+# kommt. Lokale .env oder Caches bleiben außen vor.
+# ---------------------------------------------------------------------------
 def git_dateien() -> list[str]:
     ausgabe = subprocess.run(["git", "ls-files"], check=True, capture_output=True, text=True).stdout
     return [d for d in ausgabe.splitlines() if d]
@@ -106,6 +144,11 @@ def soll_geprueft_werden(datei: str) -> bool:
     return pfad.suffix in CHECKED_SUFFIXES and pfad.name not in {"LICENSE"}
 
 
+# ---------------------------------------------------------------------------
+# Hauptprogramm
+# Prüft alle Dateien, gibt die Verstöße aus. Exit-Code 1 bei Verstößen,
+# damit der CI-Schritt rot wird; 0, wenn alles gepinnt ist.
+# ---------------------------------------------------------------------------
 def main(argv: list[str]) -> int:
     dateien = argv or git_dateien()
     verstoesse: list[Verstoss] = []

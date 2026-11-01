@@ -1,9 +1,27 @@
-# Standardregeln von gitleaks plus eine projektspezifische Regel:
-# Unsere eigenen Zugangsdaten-Variablen dürfen im Repo nie einen Wert haben.
+# Konfiguration für gitleaks (Secret-Scan, Regel 2).
+# Die CI lädt diese Datei ausdrücklich mit --config .gitleaks.toml.
 
+# ---------------------------------------------------------------------------
+# Grundlage: alle Standardregeln von gitleaks bleiben aktiv
+# (AWS, GitHub-Tokens, Hugging Face, private Schlüssel usw.).
+# ---------------------------------------------------------------------------
 [extend]
 useDefault = true
 
+# ---------------------------------------------------------------------------
+# Projektregel: Unsere Zugangsdaten-Variablen dürfen im Repo nie einen Wert
+# haben. Die Standardregeln erkennen Keys am Format – unsere selbst erzeugten
+# Keys (openssl rand -hex) haben kein erkennbares Format. Deshalb setzt diese
+# Regel am Variablennamen an.
+#
+#   regex        Gruppe 1 = Variablenname, Gruppe 2 = Wert. Der Wert muss
+#                mindestens 12 Zeichen haben und darf kein Leerzeichen,
+#                Anführungszeichen, # (Kommentar) oder $ (Verweis) enthalten.
+#                [ \t]* statt \s*, damit die Regex nicht in die nächste Zeile
+#                weiterliest.
+#   secretGroup  welche Gruppe das eigentliche Secret ist (wird geschwärzt)
+#   keywords     Vorfilter: Regex läuft nur auf Zeilen mit einem dieser Wörter
+# ---------------------------------------------------------------------------
 [[rules]]
 id = "projekt-zugangsdaten"
 description = "Wert für eine Zugangsdaten-Variable dieses Projekts"

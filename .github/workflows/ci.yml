@@ -1,21 +1,39 @@
+# CI für SwarmLLM_Benchmark: drei unabhängige Jobs, die parallel laufen.
+# Jeder Job startet auf einer frischen Ubuntu-VM (Runner) von GitHub und
+# braucht keine Zugangsdaten. Wird ein Job rot, zeigt der Pull Request das an.
+
 name: CI
 
+# ---------------------------------------------------------------------------
+# Auslöser: jeder Pull Request (egal auf welchen Branch) und jeder Push auf main
+# ---------------------------------------------------------------------------
 on:
   pull_request:
   push:
     branches: [main]
 
+# ---------------------------------------------------------------------------
+# Rechte: nur lesen. Die CI darf am Repo nichts ändern.
+# ---------------------------------------------------------------------------
 permissions:
   contents: read
 
 jobs:
+  # -------------------------------------------------------------------------
+  # Job 1 – Secret-Scan (Regel 2)
+  # Sucht mit gitleaks in jedem Commit aller Branches nach Zugangsdaten.
+  # Regeln: gitleaks-Standard plus unsere Regel aus .gitleaks.toml.
+  # -------------------------------------------------------------------------
   secrets:
     name: Secret-Scan (Regel 2)
     runs-on: ubuntu-24.04
     steps:
+      # Repo holen; fetch-depth 0 = komplette Historie aller Branches
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      # gitleaks herunterladen; die Prüfsumme stellt sicher, dass es genau
+      # die erwartete Datei ist (Regel 4)
       - name: gitleaks installieren (Version und Prüfsumme gepinnt)
         env:
           GITLEAKS_VERSION: "8.30.1"
@@ -30,25 +48,36 @@ jobs:
         # ohne die Projektregel weiterzuprüfen.
         run: ./gitleaks git --config .gitleaks.toml --redact --verbose --exit-code 1 .
 
+  # -------------------------------------------------------------------------
+  # Job 2 – Pin-Prüfung (Regel 4)
+  # Erst der Selbsttest des Prüfers, dann die echte Prüfung über das Repo.
+  # -------------------------------------------------------------------------
   pins:
     name: Pin-Prüfung (Regel 4)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Selbsttest: findet alle ci/test*.py und führt sie aus
       - name: Unit-Tests des Prüfskripts
         run: python3 -m unittest discover -s ci -v
       - name: Images, Actions und Modell-Revisionen prüfen
         run: python3 ci/check_pins.py
 
+  # -------------------------------------------------------------------------
+  # Job 3 – Linter
+  # ruff prüft Python (Regeln in ruff.toml), shellcheck prüft Bash-Skripte.
+  # -------------------------------------------------------------------------
   lint:
     name: Linter (Python und Shell)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # pipx lädt ruff in genau dieser Version in eine Wegwerf-Umgebung
       - name: ruff check
         run: pipx run ruff==0.17.3 check .
       - name: ruff format
         run: pipx run ruff==0.17.3 format --check .
+      # Alle .sh-Dateien aus Git sammeln; ohne Skripte gibt es nichts zu tun
       - name: shellcheck
         run: |
           mapfile -t dateien < <(git ls-files '*.sh')
