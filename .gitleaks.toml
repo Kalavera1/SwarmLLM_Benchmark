@@ -1,0 +1,12 @@
+# Standardregeln von gitleaks plus eine projektspezifische Regel:
+# Unsere eigenen Zugangsdaten-Variablen dürfen im Repo nie einen Wert haben.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "projekt-zugangsdaten"
+description = "Wert für eine Zugangsdaten-Variable dieses Projekts"
+regex = '''(?i)\b(RUNPOD_API_KEY|VLLM_API_KEY|LITELLM_MASTER_KEY|HF_TOKEN)[ \t]*[:=][ \t]*["']?([^\s"'#$]{12,})'''
+secretGroup = 2
+keywords = ["runpod_api_key", "vllm_api_key", "litellm_master_key", "hf_token"]
