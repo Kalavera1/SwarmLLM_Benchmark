@@ -21,20 +21,36 @@ Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× N
 
 ## Architektur
 
-```
- Mediaserver (Linux)                     RunPod (nur während Messläufen)
-┌──────────────────────────┐            ┌──────────────────────────────────┐
-│ OpenWebUI :8081          │            │ Pod: 2× RTX PRO 6000             │
-│ (bestehend, Compose)     │            │                                  │
-│     │                    │ SSH-Tunnel │  vLLM-Image direkt als Pod-Image │
-│     ▼                    │ / TCP-Port │  (OpenAI-API, mit API-Key)       │
-│ LiteLLM :4000 (Swarm) ───┼───────────►│                                  │
-│                          │            │  Gewichte + Caches auf           │
-│ Benchmark-Skripte ───────┼───────────►│  Network Volume                  │
-└──────────────────────────┘            └──────────────────────────────────┘
+```mermaid
+flowchart LR
+  B[Browser] -->|:8081| OW
 
- PC mit WSL: Entwicklung und Review (git), kein Dauerbetrieb
+  subgraph MS["Mediaserver (Linux)"]
+    OW["OpenWebUI<br/>bestehend, Compose"]
+    subgraph SW["Docker Swarm"]
+      LL["LiteLLM :4000<br/>Gateway, Keys"]
+      MO["Mock-Server<br/>OpenAI-API, ohne GPU"]
+    end
+    BS["Benchmark-Skripte"]
+  end
+
+  subgraph RP["RunPod – nur während Messläufen"]
+    V["vLLM im Pod<br/>2× RTX PRO 6000<br/>OpenAI-API mit API-Key"]
+    NV[("Network Volume<br/>Gewichte + Caches")]
+  end
+
+  OW -->|OpenAI-API| LL
+  LL -.->|Tests| MO
+  LL -->|"SSH-Tunnel / TCP-Port"| V
+  BS -.->|"direkt, ohne Gateway"| V
+  V --- NV
+
+  PC["PC mit WSL<br/>Entwicklung, Review"] -->|"Pull Request"| GH["GitHub<br/>SwarmLLM_Benchmark"]
+  GH -->|"git pull"| MS
 ```
+
+- **Durchgezogene Pfeile:** Betrieb. **Gestrichelte Pfeile:** Tests und Messungen.
+- Der PC mit WSL läuft nicht dauerhaft. Er dient nur zum Entwickeln und Reviewen; betrieben wird alles vom Mediaserver aus.
 
 - **Warum das vLLM-Image direkt als Pod-Image?** In RunPod-Pods ist kein eigenes Docker und kein Docker Compose möglich. Konfiguration läuft über Umgebungsvariablen und das Startkommando.
 - **Warum auf dem Mediaserver?** Dort läuft die OpenWebUI, die tatsächlich genutzt wird, und der Rechner ist dauerhaft an. In WSL wäre LiteLLM für andere Rechner nur mit zusätzlicher Netzwerk-Einrichtung erreichbar (WSL2 hängt hinter eigenem NAT).
