@@ -86,4 +86,4 @@ jobs:
             exit 0
           fi
           command -v shellcheck >/dev/null || sudo apt-get install -y shellcheck
-          shellcheck "${dateien[@]}"
+          shellcheck -x "${dateien[@]}" # -x: per source eingebundene Dateien mitprüfen
