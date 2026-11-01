@@ -1,0 +1,46 @@
+# Zugangsdaten – niemals committen
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Modellgewichte und große Binärdateien
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+*.ckpt
+models/
+weights/
+
+# Caches (Hugging Face, vLLM, Triton, FlashInfer, JIT)
+.cache/
+hf-cache/
+huggingface/
+jit-cache/
+cache/
+
+# Rohdaten der Benchmarks (nur aggregierte Ergebnisse kommen ins Repo)
+results/raw/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Logs und lokale Daten
+*.log
+logs/
+local/data/
+
+# Editor und Betriebssystem
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
