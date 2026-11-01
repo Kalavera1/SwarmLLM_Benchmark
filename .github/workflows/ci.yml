@@ -25,7 +25,7 @@ jobs:
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
-      - name: Gesamte Git-Historie scannen
+      - name: Alle Commits aller Branches dieses Repos scannen
         # --config ausdrücklich: Fehlt die Datei, bricht gitleaks ab, statt still
         # ohne die Projektregel weiterzuprüfen.
         run: ./gitleaks git --config .gitleaks.toml --redact --verbose --exit-code 1 .
