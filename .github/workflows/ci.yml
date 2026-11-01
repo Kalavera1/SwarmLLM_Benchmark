@@ -26,7 +26,9 @@ jobs:
           echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
       - name: Gesamte Git-Historie scannen
-        run: ./gitleaks git --redact --verbose --exit-code 1 .
+        # --config ausdrücklich: Fehlt die Datei, bricht gitleaks ab, statt still
+        # ohne die Projektregel weiterzuprüfen.
+        run: ./gitleaks git --config .gitleaks.toml --redact --verbose --exit-code 1 .
 
   pins:
     name: Pin-Prüfung (Regel 4)
