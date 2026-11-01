@@ -89,7 +89,7 @@ Ordner entstehen erst in der Phase, in der sie gebraucht werden.
 │   ├── roadmap.md      Phasen, Ergebnisse, Review-Kriterien
 │   ├── entscheidungen.md
 │   └── erfahrungen.md  Lehren aus früheren Tests
-├── local/              Phase 1: Swarm-Stack mit LiteLLM + Mock-Server
+├── local/              Phase 1: Swarm-Stack mit LiteLLM + Mock-Server (Anleitung: local/README.md)
 ├── bench/              Phase 2: Testsuite (V-Modell), blockweise startbar
 ├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen
 ├── profiles/           Phase 4+: ein Ordner pro Modell
