@@ -1,0 +1,29 @@
+# LiteLLM-Konfiguration für den Swarm-Stack.
+# Wird als Docker Config nach /etc/litellm/config.yaml gelegt.
+# Zugangsdaten stehen hier nie im Klartext: `os.environ/NAME` liest sie aus
+# Umgebungsvariablen, die start.sh aus den Docker Secrets setzt.
+
+model_list:
+  # Phase 1: Mock-Server im selben Overlay-Netz, ohne GPU
+  - model_name: mock
+    litellm_params:
+      model: openai/mock-model
+      api_base: http://mock:8000/v1
+      api_key: os.environ/MOCK_API_KEY
+
+  # Ab Phase 4 kommen hier die Modelle im RunPod-Pod dazu, z. B.:
+  # - model_name: deepseek-v4-flash
+  #   litellm_params:
+  #     model: openai/deepseek-v4-flash
+  #     api_base: http://host.docker.internal:18000/v1   # SSH-Tunnel zum Pod
+  #     api_key: os.environ/VLLM_API_KEY
+
+litellm_settings:
+  # Lange Prompts brauchen Minuten bis zum ersten Token (1M Tokens auf
+  # 2× RTX PRO 6000: ca. 4,5–5 Min.). Großzügig, aber nicht unendlich.
+  request_timeout: 1800
+  # Unbekannte Parameter nicht stillschweigend verwerfen, sondern durchreichen
+  drop_params: false
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

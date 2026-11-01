@@ -1,0 +1,93 @@
+# Swarm-Stack für den Mediaserver: LiteLLM als Gateway plus Mock-Server.
+# Nicht direkt deployen, sondern über ./deploy.sh – das Skript prüft die Pins,
+# legt fehlende Secrets an und setzt die Config-Namen (Swarm-Configs sind
+# unveränderlich, deshalb steckt ein Hash des Inhalts im Namen).
+
+services:
+  litellm:
+    image: ${LITELLM_IMAGE}
+    entrypoint: ["/bin/sh", "/usr/local/bin/start-litellm.sh"]
+    command: []
+    configs:
+      - source: litellm_config
+        target: /etc/litellm/config.yaml
+      - source: litellm_start
+        target: /usr/local/bin/start-litellm.sh
+        mode: 0555
+    secrets:
+      - litellm_master_key
+      - mock_api_key
+    ports:
+      # Modus "host": Port direkt am Mediaserver, ohne Swarm-Routing-Mesh.
+      # Die bestehende OpenWebUI erreicht LiteLLM über die LAN-IP:4000.
+      - target: 4000
+        published: 4000
+        protocol: tcp
+        mode: host
+    networks: [llm]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=5)"]
+      interval: 15s
+      timeout: 8s
+      retries: 5
+      start_period: 90s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+      update_config:
+        order: stop-first # Host-Port kann nicht von zwei Replikaten gleichzeitig belegt sein
+      resources:
+        limits:
+          memory: 2g
+
+  mock:
+    image: ${LITELLM_IMAGE} # gleiches Image, bringt Python mit – ein Pin weniger
+    entrypoint: ["python", "/opt/mock/mock_openai.py"]
+    command: ["--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      MOCK_API_KEY_FILE: /run/secrets/mock_api_key
+      MOCK_REASONING: "1"
+    configs:
+      - source: mock_script
+        target: /opt/mock/mock_openai.py
+    secrets:
+      - mock_api_key
+    networks: [llm]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 15s
+      timeout: 6s
+      retries: 3
+      start_period: 15s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+      resources:
+        limits:
+          memory: 256m
+
+configs:
+  litellm_config:
+    name: litellm-config-${LITELLM_CONFIG_HASH}
+    file: ./litellm/config.yaml
+  litellm_start:
+    name: litellm-start-${LITELLM_START_HASH}
+    file: ./litellm/start.sh
+  mock_script:
+    name: mock-script-${MOCK_SCRIPT_HASH}
+    file: ./mock/mock_openai.py
+
+secrets:
+  litellm_master_key:
+    external: true
+  mock_api_key:
+    external: true
+
+networks:
+  llm:
+    driver: overlay
+    attachable: true
