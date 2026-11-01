@@ -4,6 +4,28 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-01 – Testsuite nach V-Modell, ABAP als automatisch geprüfter Eval
+
+**Entscheidung:** Die Tests werden in vier Ebenen gegliedert (Unit, Integration, System, Abnahme) und über eine Kommandozeile blockweise gestartet. Die Modellqualität bei ABAP wird als eigener Eval-Block gemessen: Codeblöcke werden mit abaplint geprüft, dazu kommt eine feste Kriterienliste je Aufgabe.
+
+**Warum:**
+- Jeder Block muss einzeln wiederholbar sein, damit nach einer Änderung nicht der ganze, teure GPU-Lauf neu nötig ist.
+- Im B300-Test wurde ABAP nur durch Lesen bewertet und nicht kompiliert. Ein SAP-System steht privat nicht zur Verfügung; abaplint prüft die Syntax ohne SAP-System.
+
+**Offen:** Wie weit abaplint CDS, Behavior Definitions (RAP) und SQLScript in AMDP abdeckt. Was nicht abgedeckt ist, bewertet die Kriterienliste.
+
+## 2026-11-01 – Schlanke CI statt vollem Toolset
+
+**Entscheidung:** GitHub Actions mit Secret-Scan (gitleaks), Pin-Prüfung und Linter (ruff, shellcheck). Actions und gitleaks sind per Commit-SHA bzw. Prüfsumme gepinnt. Kein Dependabot.
+
+**Warum:**
+- Ein geleakter RunPod-Key kostet echtes Geld; der Secret-Scan läuft deshalb über die gesamte Historie, mit einer eigenen Regel für die Variablen aus `.env.example`.
+- Regel 4 (Alles gepinnt) wird technisch erzwungen statt nur dokumentiert.
+- Dependabot würde ständig Updates für bewusst gepinnte Versionen vorschlagen. Updates testen wir gezielt.
+- Die CI braucht keine Zugangsdaten, also auch keine GitHub Secrets.
+
+**Offen:** Branch-Schutz für `main` (Merge nur per Pull Request mit grüner CI) muss der Repo-Inhaber in den GitHub-Einstellungen setzen. Bei privaten Repos setzt GitHub das nur mit einem Pro-Konto durch.
+
 ## 2026-11-01 – Lange Prompts nicht über den RunPod-HTTP-Proxy
 
 **Entscheidung:** LiteLLM und die Benchmark-Skripte erreichen vLLM per SSH-Tunnel oder über einen direkt freigegebenen TCP-Port. Der HTTP-Proxy (`<pod-id>-8000.proxy.runpod.net`) dient höchstens für kurze Funktionstests.
@@ -52,7 +74,7 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 **Warum:**
 - Upstream-vLLM hat für die Sparse-Attention von DeepSeek V4 auf SM120 (RTX PRO 6000) keinen fertigen Kernel. Karmic bringt ihn mit (B12X), dazu PCIe-optimiertes All-Reduce, KV-Offloading und schnelles Laden (InstantTensor).
-- Wird beruflich bereits für DeepSeek V4 Flash Vision genutzt – bekannte Referenz.
+- Bekannte Referenz: Community-Rezepte für DeepSeek V4 Flash auf RTX PRO 6000 (u. a. das rtx6kpro-Wiki) setzen auf genau diese Image-Linie.
 
 **Risiken:** Pre-Release, sehr hohes Release-Tempo, wenige Maintainer. Deshalb nie den `-beta`-Tag, immer Digest.
 
@@ -68,8 +90,8 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 **Offen:** Ob RunPod genug System-RAM und `/dev/shm` für KV-Offloading bereitstellt – wird in Phase 4 geprüft.
 
-## 2026-10-30 – Eigenes privates Repo, getrennt vom Beruf
+## 2026-10-30 – Eigenes privates Repo, strikt isoliert
 
-**Entscheidung:** Neues privates Repo im persönlichen GitHub-Account. Nichts aus dem beruflichen Stack wird übernommen.
+**Entscheidung:** Neues privates Repo im persönlichen GitHub-Account. Kein Code, keine Configs und keine Zugangsdaten aus anderen Stack-Projekten.
 
-**Warum:** Deployment aus dem beruflichen Repo ist untersagt, und der dortige Stack hat zu viele Abhängigkeiten (Actions-Runner, MCPs, MCPOs).
+**Warum:** Ein eigenständiges Repo ohne fremde Abhängigkeiten (Actions-Runner, MCPs, MCPOs) bleibt überschaubar und lässt sich jederzeit vollständig nachvollziehen.
