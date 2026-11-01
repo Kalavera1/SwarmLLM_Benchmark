@@ -81,13 +81,16 @@ Ordner entstehen erst in der Phase, in der sie gebraucht werden.
 ```
 .
 ├── README.md
+├── CLAUDE.md           Arbeitsregeln für Claude-Sitzungen
 ├── .env.example        Vorlage für Zugangsdaten (echte Werte nur in .env)
+├── .github/workflows/  CI: Secret-Scan, Pin-Prüfung, Linter
+├── ci/                 Prüfskripte der CI mit Unit-Tests
 ├── docs/
 │   ├── roadmap.md      Phasen, Ergebnisse, Review-Kriterien
 │   ├── entscheidungen.md
 │   └── erfahrungen.md  Lehren aus früheren Tests
 ├── local/              Phase 1: Swarm-Stack mit LiteLLM + Mock-Server
-├── bench/              Phase 2: Benchmark-Skripte
+├── bench/              Phase 2: Testsuite (V-Modell), blockweise startbar
 ├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen
 ├── profiles/           Phase 4+: ein Ordner pro Modell
 └── results/            Messergebnisse (JSON + Zusammenfassung)
