@@ -22,7 +22,7 @@ Diese Datei lädt jede Claude-Sitzung automatisch, auch in Claude Code. Sie erg�
   python3 -m unittest discover -s ci -v
   python3 ci/check_pins.py
   ruff check . && ruff format --check .
-  git ls-files '*.sh' | xargs -r shellcheck
+  git ls-files '*.sh' | xargs -r shellcheck -x
   gitleaks git --config .gitleaks.toml --redact --exit-code 1 .
   ```
 - **Neues gehört dokumentiert:** Entscheidungen mit Datum, Begründung und Quelle in [`docs/entscheidungen.md`](docs/entscheidungen.md) (neueste oben), Lehren aus Testläufen in [`docs/erfahrungen.md`](docs/erfahrungen.md), Änderungen am Plan in [`docs/roadmap.md`](docs/roadmap.md).

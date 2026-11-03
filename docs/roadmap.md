@@ -6,7 +6,7 @@ Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder P
 |---|---|---|---|
 | 0 | Repo-Grundgerüst | 0 € | in Review |
 | 0b | CI und Arbeitsregeln | 0 € | in Review |
-| 1 | Lokaler Stack | 0 € | offen |
+| 1 | Lokaler Stack | 0 € | in Review, Test auf dem Mediaserver offen |
 | 2 | Testsuite (V-Modell) | 0 € | offen |
 | 3 | RunPod vorbereiten | wenige € (Volume, CPU-Pod) | offen |
 | 4 | Erster GPU-Test | ca. 1 h GPU | offen |
