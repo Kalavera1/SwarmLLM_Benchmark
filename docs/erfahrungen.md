@@ -1,6 +1,21 @@
 # Erfahrungen aus früheren Tests
 
-Lehren aus Vorgänger-Projekten, damit wir dieselben Fehler nicht zweimal bezahlen. Übernommen werden nur Erfahrungen, kein Code.
+Lehren aus Vorgänger-Projekten und aus dem Bau dieses Projekts, damit wir dieselben Fehler nicht zweimal bezahlen. Aus anderen Repos werden nur Erfahrungen übernommen, kein Code. Neueste Einträge oben.
+
+---
+
+## Bau von Phase 1 am 01.11.2026: LiteLLM v1.106.6 mit Mock
+
+Lokal ohne Docker getestet: LiteLLM aus PyPI (gleiche Version wie das Image), Mock-Server und Smoke-Test.
+
+| Befund | Konsequenz |
+|---|---|
+| **LiteLLM ohne Datenbank antwortet bei Abweisung nicht mit 401:** ohne Key 500 (Fehler im eigenen Exception-Handler), mit falschem Key 400 „No connected db“ | Abgewiesen wird trotzdem. Tests prüfen „keine 2xx-Antwort“ statt genau 401 |
+| Ohne Datenbank gibt es nur den Master-Key, keine eigenen Keys pro Anwendung | Für die Tests ausreichend; eigene Keys erst mit Postgres |
+| gitleaks meldet `curl -H "Authorization: Bearer ${VAR}"` als Fund, auch wenn nur eine Variable drinsteht | In Skripten `curl --oauth2-bearer "$VAR"` verwenden |
+| shellcheck folgt `source`-Dateien nur mit `-x` | CI und lokale Prüfung laufen mit `shellcheck -x` |
+| Swarm-Configs sind unveränderlich | `deploy.sh` hängt einen Inhalts-Hash an den Config-Namen |
+| `mode: 0555` in der Stack-Datei wird korrekt als Oktalzahl gelesen (`docker stack config` zeigt 365 dezimal) | – |
 
 ---
 

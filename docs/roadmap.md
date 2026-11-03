@@ -5,8 +5,9 @@ Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder P
 | Phase | Ziel | Kosten | Status |
 |---|---|---|---|
 | 0 | Repo-Grundgerüst | 0 € | in Review |
-| 1 | Lokaler Stack | 0 € | offen |
-| 2 | Benchmark-Skripte | 0 € | offen |
+| 0b | CI und Arbeitsregeln | 0 € | in Review |
+| 1 | Lokaler Stack | 0 € | in Review, Test auf dem Mediaserver offen |
+| 2 | Testsuite (V-Modell) | 0 € | offen |
 | 3 | RunPod vorbereiten | wenige € (Volume, CPU-Pod) | offen |
 | 4 | Erster GPU-Test | ca. 1 h GPU | offen |
 | 5 | DeepSeek V4 Flash | mehrere h GPU | offen |
@@ -21,6 +22,17 @@ Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder P
 
 **Fertig, wenn:** reviewt und ins private Repo gepusht.
 
+## Phase 0b – CI und Arbeitsregeln
+
+**Ergebnis:**
+- GitHub Actions mit drei Prüfungen bei jedem Pull Request und Push auf `main`:
+  - Secret-Scan mit gitleaks über die gesamte Historie, plus eigene Regel für die Zugangsdaten-Variablen dieses Projekts (Regel 2)
+  - Pin-Prüfung für Images, Actions und Modell-Revisionen, mit eigenen Unit-Tests (Regel 4)
+  - Linter: ruff für Python, shellcheck für Bash
+- `CLAUDE.md` mit den Arbeitsregeln für jede Claude-Sitzung
+
+**Fertig, wenn:** Die CI läuft im Pull Request grün, und ein absichtlich eingebauter Verstoß wird erkannt (lokal nachgewiesen).
+
 ## Phase 1 – Lokaler Stack
 
 **Ergebnis:** `local/` mit einem Docker-Swarm-Stack (Single-Node auf dem Mediaserver) für LiteLLM und einen Mock-Server, der die OpenAI-API nachahmt – noch keine GPU. Der LiteLLM-Master-Key liegt als Docker Secret vor, nicht in einer Datei im Repo. Die bestehende OpenWebUI (Port 8081, Compose) bleibt unverändert und bekommt LiteLLM nur als zusätzliche OpenAI-Verbindung.
@@ -29,21 +41,30 @@ Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder P
 
 **Fertig, wenn:** `docker stack deploy` läuft durch, alle Services sind gesund, und ein Chat in der bestehenden OpenWebUI geht über LiteLLM zum Mock und zurück.
 
-## Phase 2 – Benchmark-Skripte
+## Phase 2 – Testsuite (V-Modell)
 
-**Ergebnis:** `bench/` mit Skripten für:
-- Prefill und Zeit bis zum ersten Token (8k, 32k, 128k, 500k, 1M)
-- Decode bei 1, 4, 8, 16 (und 32) parallelen Anfragen
-- Nadeltest (versteckte Fakten bei 128k, 500k, 1M)
-- Lastmix: 4 Coding-Agenten mit wachsendem Kontext plus 8–10 Chat-Nutzer
-- Prefix-Caching: Folgeanfrage warm gegen kalt
+**Ergebnis:** `bench/` als Testsuite mit vier Ebenen nach dem V-Modell:
 
-Jedes Skript schreibt ein JSON mit Messwerten und Metadaten. Aus dem B300-Test:
+| Ebene | Frage | Testblöcke |
+|---|---|---|
+| Unit | Rechnen unsere eigenen Skripte richtig? | Auswertung, Parser, Prüfskripte |
+| Integration | Funktioniert die Kette? | OpenWebUI → LiteLLM → Ziel, Key-Schutz, Streaming, Tool-Call-Format |
+| System | Wie verhält sich der Server? | Prefill und Zeit bis zum ersten Token (8k–1M), Decode bei 1–32 parallelen Anfragen, Nadeltest (128k, 500k, 1M), Lastmix (4 Coding-Agenten plus 8–10 Chat-Nutzer), Prefix-Caching warm gegen kalt |
+| Abnahme (Eval) | Wie gut ist das Modell fachlich? | ABAP, Coding, Tool-Calls, Rechenaufgabe mit bekannter Lösung bei verschiedenen Denktiefen |
+
+**Bedienung:** Eine Kommandozeile, die jeden Block einzeln startet, z. B. `bench run abap --profil glm53-flash`. Ergebnisse landen pro Profil und Block mit Zeitstempel unter `results/`. Nach einer Änderung läuft nur der betroffene Block neu.
+
+**ABAP-Eval:** Grundlage sind die 7 Aufgaben aus dem B300-Test (ALV-Report, ABAP-SQL, CDS View, RAP, Fehlersuche, Modernisierung, AMDP). Damals wurde nur durch Lesen bewertet. Neu:
+- Codeblöcke werden aus der Antwort gezogen und automatisch mit **abaplint** geprüft (Syntaxcheck ohne SAP-System).
+- Jede Aufgabe bekommt eine feste Kriterienliste, z. B. für die Fehlersuche die erwarteten Funde. Damit ist der Vergleich zwischen Modellen fair.
+- Was abaplint nicht abdeckt, wird über die Kriterienliste bewertet. Welche Teile das genau sind, etwa SQLScript in AMDP oder Behavior Definitions, klären wir beim Bau.
+
+**Aus dem B300-Test:**
 - eigener User-Agent (der RunPod-Proxy blockt `Python-urllib`)
 - Aufwärmrunde vor jeder Messung, nicht mitgezählt
 - `max_tokens` ≥ 32k, Denk-Tokens getrennt erfasst, Denktiefe als Parameter
 
-**Fertig, wenn:** Alle Skripte laufen gegen den Mock und erzeugen gültiges JSON.
+**Fertig, wenn:** Alle Blöcke laufen einzeln gegen den Mock, die Unit-Tests sind grün, und jedes Ergebnis ist ein gültiges JSON mit Metadaten.
 
 ## Phase 3 – RunPod vorbereiten
 
@@ -68,7 +89,7 @@ Jedes Skript schreibt ein JSON mit Messwerten und Metadaten. Aus dem B300-Test:
 
 ## Phase 5 – DeepSeek V4 Flash
 
-**Ergebnis:** Komplette Testmatrix aus Phase 2, dazu Varianten:
+**Ergebnis:** Alle Blöcke der Testsuite aus Phase 2, dazu Varianten:
 - KV-Cache FP8 gegen NVFP4
 - KV-Offloading in den RAM an/aus
 
@@ -76,7 +97,7 @@ Jedes Skript schreibt ein JSON mit Messwerten und Metadaten. Aus dem B300-Test:
 
 ## Phase 6 – GLM-5.3-Flash
 
-**Ergebnis:** Gleiche Testmatrix, dazu Varianten:
+**Ergebnis:** Dieselben Blöcke der Testsuite, dazu Varianten:
 - Speculative Decoding: DFlash2 gegen MTP gegen aus
 - KV-Cache FP8 gegen NVFP4
 
