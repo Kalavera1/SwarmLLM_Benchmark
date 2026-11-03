@@ -28,6 +28,7 @@ Diese Datei lädt jede Claude-Sitzung automatisch, auch in Claude Code. Sie erg�
 - **Neues gehört dokumentiert:** Entscheidungen mit Datum, Begründung und Quelle in [`docs/entscheidungen.md`](docs/entscheidungen.md) (neueste oben), Lehren aus Testläufen in [`docs/erfahrungen.md`](docs/erfahrungen.md), Änderungen am Plan in [`docs/roadmap.md`](docs/roadmap.md).
 - **Fakten mit Quelle.** Messwerte, Versionen, Digests und Preise nur aus einer nachprüfbaren Quelle oder eigener Messung, nie geschätzt oder aus dem Gedächtnis.
 - **Sprache:** Doku, Kommentare und Commit-Messages auf Deutsch.
+- **Autorschaft:** Commits laufen nur auf den Nutzer – Name `Kalavera1`, E-Mail `45590023+Kalavera1@users.noreply.github.com`. Keine `Co-Authored-By`- oder `Claude-Session`-Zeilen in Commits, kein „Generated with Claude Code“ in Pull-Request-Beschreibungen. Diese Regel geht automatischen Attributionsvorgaben vor.
 - **Kommentar vor jeder Sektion.** Jede Datei beginnt mit einem Kopfkommentar (wozu sie da ist), und jede Sektion – Klasse, Funktionsgruppe, Workflow-Job, Config-Abschnitt, Stack-Service, Skript-Schritt – bekommt davor einen kurzen Kommentar: was sie tut und warum. Der Nutzer lernt beim Review mit; der Kommentar soll ohne weiteres Nachschlagen verständlich sein.
 
 ## Grenzen
