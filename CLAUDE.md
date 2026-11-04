@@ -23,8 +23,11 @@ Diese Datei lädt jede Claude-Sitzung automatisch, auch in Claude Code. Sie erg�
   python3 ci/check_pins.py
   ruff check . && ruff format --check .
   git ls-files '*.sh' | xargs -r shellcheck -x
+  bash ci/test_gitleaks_regel.sh
   gitleaks git --config .gitleaks.toml --redact --exit-code 1 .
+  gitleaks dir --config .gitleaks.toml --redact --exit-code 1 .
   ```
+  `gitleaks git` sieht nur Committetes; `gitleaks dir` prüft zusätzlich die Dateien, die gerade erst geändert oder neu sind. Beide laufen lassen, sonst fällt ein Fund erst in der CI auf.
 - **Neues gehört dokumentiert:** Entscheidungen mit Datum, Begründung und Quelle in [`docs/entscheidungen.md`](docs/entscheidungen.md) (neueste oben), Lehren aus Testläufen in [`docs/erfahrungen.md`](docs/erfahrungen.md), Änderungen am Plan in [`docs/roadmap.md`](docs/roadmap.md).
 - **Fakten mit Quelle.** Messwerte, Versionen, Digests und Preise nur aus einer nachprüfbaren Quelle oder eigener Messung, nie geschätzt oder aus dem Gedächtnis.
 - **Sprache:** Doku, Kommentare und Commit-Messages auf Deutsch.

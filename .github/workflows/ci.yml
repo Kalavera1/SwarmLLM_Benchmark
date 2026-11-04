@@ -43,6 +43,10 @@ jobs:
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
+      # Selbsttest: prüft die Projektregel mit künstlichen Fällen (echte Werte
+      # müssen erkannt werden, legitime Muster dürfen keinen Fehlalarm geben)
+      - name: Selbsttest der Projektregel
+        run: GITLEAKS=./gitleaks bash ci/test_gitleaks_regel.sh
       - name: Alle Commits aller Branches dieses Repos scannen
         # --config ausdrücklich: Fehlt die Datei, bricht gitleaks ab, statt still
         # ohne die Projektregel weiterzuprüfen.

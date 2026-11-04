@@ -39,10 +39,12 @@ cd ~/projekte/SwarmLLM_Benchmark
 ```bash
 cp .env.example .env
 chmod 600 .env
-echo "LITELLM_MASTER_KEY=sk-$(openssl rand -hex 24)"   # Ausgabe in .env eintragen
+# Die Vorlage enthält die Zeile LITELLM_MASTER_KEY= schon leer – Wert dort einsetzen:
+sed -i "s|^LITELLM_MASTER_KEY=.*|LITELLM_MASTER_KEY=sk-$(openssl rand -hex 24)|" .env
+grep -c '^LITELLM_MASTER_KEY=' .env    # Kontrolle: muss 1 ausgeben
 ```
 
-Den Master-Key brauchst du gleich noch einmal für OpenWebUI.
+Den Master-Key brauchst du gleich noch einmal für OpenWebUI (`grep LITELLM_MASTER_KEY .env`).
 
 **3. Swarm einschalten**
 
