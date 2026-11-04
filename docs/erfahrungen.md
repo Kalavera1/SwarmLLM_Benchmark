@@ -4,6 +4,21 @@ Lehren aus Vorgänger-Projekten und aus dem Bau dieses Projekts, damit wir diese
 
 ---
 
+## Einrichtung auf dem Mediaserver am 03.11.2026: Snap-Docker blockiert das Netz
+
+| Befund | Konsequenz |
+|---|---|
+| `docker pull` scheitert bei jedem Image: `lookup … on 127.0.0.53:53: write: permission denied`, DNS auf dem Host funktioniert | Ursache ist nicht das Netz, sondern der Docker-Daemon |
+| Docker läuft als **Snap** (29.8.0, Rev. 3618), dazu ist `docker-ce` 29.9.0 inaktiv installiert | zwei Installationen nebeneinander; `command -v dockerd` zeigt die inaktive |
+| Kernel-Log: `apparmor="DENIED" profile="snap.docker.dockerd" … denied="receive"`, über 1,1 Mio. Einträge | Der Snap-Käfig blockiert Netzwerkzugriffe, schon länger |
+| Bekanntes Fehlerbild: [canonical/docker-snap#350](https://github.com/canonical/docker-snap/issues/350), keine Lösung | Umzug auf docker-ce, siehe Entscheidungslog |
+| `git clone` per SSH: `Permission denied (publickey)` | Der Server braucht einen Deploy-Key, nur lesend und nur für dieses Repo |
+| `.env.example` enthält `LITELLM_MASTER_KEY=` schon leer | Wert per `sed` in die Zeile setzen, nicht anhängen (behoben in #7) |
+
+**Für künftige Server:** Vor dem ersten Deploy prüfen, wie Docker installiert ist (`ps -eo cmd \| grep '[d]ockerd'` zeigt den Datenordner) und ob `docker pull hello-world` funktioniert.
+
+---
+
 ## Bau von Phase 1 am 01.11.2026: LiteLLM v1.106.6 mit Mock
 
 Lokal ohne Docker getestet: LiteLLM aus PyPI (gleiche Version wie das Image), Mock-Server und Smoke-Test.

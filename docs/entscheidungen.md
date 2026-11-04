@@ -4,6 +4,16 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-04 – Mediaserver: docker-ce statt Snap-Docker
+
+**Entscheidung:** Der Mediaserver wechselt vom Snap-Docker auf das offizielle Paket `docker-ce` (bereits installiert, 29.9.0). Anleitung: [`betrieb/docker-snap-zu-docker-ce.md`](betrieb/docker-snap-zu-docker-ce.md).
+
+**Warum:** Der AppArmor-Käfig des Snaps blockiert Netzwerkzugriffe des Daemons. Kein `docker pull` ist möglich, damit auch keine Updates und kein Phase-1-Deploy. Eine Reparatur ist nicht bekannt ([canonical/docker-snap#350](https://github.com/canonical/docker-snap/issues/350)).
+
+**Abwägung:** Der Snap war bewusst gewählt, damit die Terminal-Container zusätzlich eingesperrt sind. Diese äußere Schicht fällt weg. Der Nutzer hat entschieden, zuerst umzuziehen und die Terminals danach gezielt zu härten (gVisor, eigenes Netz, Limits).
+
+**Offen:** Härtung der Terminal-Container als eigener Schritt nach dem Umzug.
+
 ## 2026-11-01 – Testsuite nach V-Modell, ABAP als automatisch geprüfter Eval
 
 **Entscheidung:** Die Tests werden in vier Ebenen gegliedert (Unit, Integration, System, Abnahme) und über eine Kommandozeile blockweise gestartet. Die Modellqualität bei ABAP wird als eigener Eval-Block gemessen: Codeblöcke werden mit abaplint geprüft, dazu kommt eine feste Kriterienliste je Aufgabe.
