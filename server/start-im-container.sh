@@ -77,6 +77,27 @@ ergebnis["shm_gb"] = round(shutil.disk_usage("/dev/shm").total / 1e9, 1)
 ergebnis["disk_frei_gb"] = round(shutil.disk_usage(os.environ.get("MODELL_ORDNER", "/modelle")).free / 1e9, 1)
 ergebnis["blockgeraete"] = befehl("lsblk", "-d", "-o", "NAME,ROTA,SIZE,MODEL")
 
+# RAM-Bandbreite grob messen: 4 GB im Arbeitsspeicher kopieren (lesen + schreiben),
+# mit allen sichtbaren Kernen. Wichtig für Modelle mit CPU-Experten (DeepSeek V4.1
+# Flash): Ihr Tempo hängt fast direkt an diesem Wert. Zum Vergleich: EPYC 9745 mit
+# 12 Kanälen DDR5 hat laut Händler bis 576 GB/s (theoretisch).
+try:
+    import time
+    import torch
+    torch.set_num_threads(os.cpu_count() or 1)
+    quelle = torch.empty(4 * 1024**3, dtype=torch.uint8)
+    ziel = torch.empty_like(quelle)
+    ziel.copy_(quelle)  # erster Durchlauf zählt nicht (Seiten anlegen)
+    messungen = []
+    for _ in range(3):
+        start = time.perf_counter()
+        ziel.copy_(quelle)
+        messungen.append(2 * quelle.numel() / (time.perf_counter() - start) / 1e9)
+    ergebnis["ram_bandbreite_gb_s"] = round(max(messungen), 1)
+    del quelle, ziel
+except Exception as fehler:
+    ergebnis["ram_bandbreite_gb_s"] = f"Fehler: {fehler}"
+
 try:
     import torch
     n = torch.cuda.device_count()
