@@ -1,0 +1,59 @@
+# benchmark.conf – alle eigenen Werte an einer Stelle.
+#
+# So geht's:
+#   cp benchmark.conf.example benchmark.conf      und dann hier die Werte eintragen
+# benchmark.conf steht in .gitignore und kommt nie ins Repo (Regel 2).
+# Nur Zugangsdaten verwenden, die ausschließlich für dieses Projekt angelegt wurden.
+#
+# Format: NAME=WERT, ohne Leerzeichen um das =. Leer lassen = nicht genutzt.
+# Anleitung: ANLEITUNG.md
+
+# ---------------------------------------------------------------------------
+# 1. Zugangsschutz für vLLM (Pflicht, Regel 8)
+#    Ein Key, den du selbst erzeugst:  openssl rand -hex 24
+#    Bei RunPod erzeugt rp.py pro Pod automatisch einen eigenen Key; dieser Wert
+#    gilt dann für eigene Server und Google Cloud.
+# ---------------------------------------------------------------------------
+VLLM_API_KEY=
+
+# ---------------------------------------------------------------------------
+# 2. Hugging Face – Read-Token (huggingface.co → Settings → Access Tokens).
+#    Nötig für gesperrte Modelle und für schnellere Downloads.
+# ---------------------------------------------------------------------------
+HF_TOKEN=
+
+# ---------------------------------------------------------------------------
+# 3. Wohin gemessen wird, wenn KEIN RunPod-Pod läuft
+#    (eigener Server, Google-Cloud-VM, Vast.ai). Mit /v1 am Ende.
+#    Beispiel: http://203.0.113.10:8000/v1
+# ---------------------------------------------------------------------------
+BENCH_ZIEL_URL=
+
+# Stundenpreis dieses Servers in $ – nur damit jedes Ergebnis seine Kosten
+# ausweist. Eigener Server: leer lassen. RunPod: setzt rp.py selbst.
+BENCH_KOSTEN_PRO_STUNDE=
+
+# ---------------------------------------------------------------------------
+# 4. RunPod (nur für den automatischen Weg mit runpod/rp.py)
+# ---------------------------------------------------------------------------
+# API-Key: runpod.io → Settings → API Keys
+RUNPOD_API_KEY=
+# GPU-Typ: ID aus  python3 runpod/rp.py gpus
+RUNPOD_GPU_ID=
+# COMMUNITY (günstiger) oder SECURE
+RUNPOD_CLOUD=COMMUNITY
+
+# ---------------------------------------------------------------------------
+# 5. Geld und Sicherheit
+# ---------------------------------------------------------------------------
+# Obergrenze in $ für alle RunPod-Läufe zusammen (verbucht in results/kosten.csv)
+RUNPOD_BUDGET_USD=100
+# Watchdog: Der Pod wird spätestens nach so vielen Minuten gelöscht.
+# Leer lassen = Standard je Stufe (schnell 90, voll 210).
+POD_MAX_MINUTES=
+
+# ---------------------------------------------------------------------------
+# 6. Optional: LiteLLM-Gateway (nur wenn über --ueber-gateway gemessen wird)
+# ---------------------------------------------------------------------------
+LITELLM_URL=
+LITELLM_MASTER_KEY=

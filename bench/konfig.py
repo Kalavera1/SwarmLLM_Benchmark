@@ -2,7 +2,7 @@
 
 Woher die Werte kommen (spätere Quelle gewinnt):
   1. profiles/<name>/profile.env    Modell, Fähigkeiten, Startparameter
-  2. .env im Repo-Wurzelordner       Zugangsdaten (nie im Repo, Regel 2)
+  2. benchmark.conf (bzw. .env)       alle eigenen Werte und Zugangsdaten (nie im Repo, Regel 2)
   3. runpod/.aktueller-pod.json      vom Pod-Skript geschrieben: URL, Key, Kosten
   4. Umgebungsvariablen              z. B. BENCH_ZIEL_URL für einen Einzeltest
   5. Kommandozeile                   --ziel, --ueber-gateway
@@ -23,6 +23,7 @@ PROFILE_ORDNER = REPO / "profiles"
 ERGEBNIS_ORDNER = REPO / "results"
 POD_DATEI = REPO / "runpod" / ".aktueller-pod.json"
 ENV_DATEI = REPO / ".env"
+KONF_DATEI = REPO / "benchmark.conf"
 
 STANDARD_ZIEL = "http://127.0.0.1:8000/v1"
 STANDARD_GATEWAY = "http://127.0.0.1:4000/v1"
@@ -49,6 +50,14 @@ def lies_env_datei(pfad: Path) -> dict[str, str]:
             wert = wert[1:-1]
         werte[schluessel.strip()] = wert
     return werte
+
+
+# ---------------------------------------------------------------------------
+# Eigene Werte: benchmark.conf (Vorlage benchmark.conf.example). Aus älteren
+# Ständen wird .env weiter gelesen; benchmark.conf gewinnt bei doppelten Werten.
+# ---------------------------------------------------------------------------
+def lies_einstellungen() -> dict[str, str]:
+    return lies_env_datei(ENV_DATEI) | lies_env_datei(KONF_DATEI)
 
 
 # ---------------------------------------------------------------------------
@@ -144,13 +153,18 @@ class Ziel:
     @property
     def kosten_pro_stunde(self) -> float:
         try:
-            return float(self.pod.get("kosten_pro_stunde") or os.environ.get("BENCH_KOSTEN_PRO_STUNDE") or 0)
+            return float(
+                self.pod.get("kosten_pro_stunde")
+                or os.environ.get("BENCH_KOSTEN_PRO_STUNDE")
+                or lies_einstellungen().get("BENCH_KOSTEN_PRO_STUNDE")
+                or 0
+            )
         except ValueError:
             return 0.0
 
 
 def ziel_aufloesen(profil: Profil, ziel_url: str | None = None, ueber_gateway: bool = False) -> Ziel:
-    env = lies_env_datei(ENV_DATEI)
+    env = lies_einstellungen()
 
     def wert(name: str, standard: str = "") -> str:
         return os.environ.get(name) or env.get(name) or standard

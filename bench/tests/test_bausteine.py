@@ -147,6 +147,18 @@ class TestKonfig(unittest.TestCase):
         profil = Profil("test", werte)
         self.assertEqual(profil.denkstufen, {"aus": {"t": False}, "an": {}})
 
+    def test_benchmark_conf_gewinnt_vor_env(self):
+        from unittest import mock
+
+        from bench import konfig
+
+        with tempfile.TemporaryDirectory() as ordner:
+            env, conf = Path(ordner) / ".env", Path(ordner) / "benchmark.conf"
+            env.write_text("A=alt\nB=nur-env\n", encoding="utf-8")
+            conf.write_text("A=neu\n", encoding="utf-8")
+            with mock.patch.object(konfig, "ENV_DATEI", env), mock.patch.object(konfig, "KONF_DATEI", conf):
+                self.assertEqual(konfig.lies_einstellungen(), {"A": "neu", "B": "nur-env"})
+
     def test_standardwerte(self):
         profil = Profil("p", {})
         self.assertTrue(profil.key_pflicht)
