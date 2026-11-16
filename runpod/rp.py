@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""RunPod-Steuerung über die REST-API v2: Pod anlegen, prüfen, löschen – mit Budget.
+"""RunPod-Steuerung über die REST-API v2: Pod anlegen, prüfen, löschen.
 
 Befehle (alle vom Steuerrechner aus, im Repo-Ordner):
   python3 runpod/rp.py gpus                      GPU-Typen aus dem Katalog (ID für RUNPOD_GPU_ID)
-  python3 runpod/rp.py budget                    verbraucht / Budget / Rest
+  python3 runpod/rp.py kosten                    bisher verbuchte Kosten aller Pods
   python3 runpod/rp.py up <profil> [--stufe schnell|voll] [--minuten N] [--cloud COMMUNITY|SECURE] [--trocken]
   python3 runpod/rp.py warten                    bis vLLM antwortet; misst die Kaltstartzeit
   python3 runpod/rp.py check                     Host (P2P, CPU, RAM), Modellname, Key-Schutz
@@ -12,8 +12,9 @@ Befehle (alle vom Steuerrechner aus, im Repo-Ordner):
   python3 runpod/rp.py down-alle                 Notbremse: alle eigenen Pods terminieren
 
 Sicherheitsnetz (Regel 5 und geldschonend):
-  - Vor dem Anlegen: Kostenschätzung, Abbruch wenn das Restbudget nicht reicht,
-    ausdrückliche Bestätigung mit "ja".
+  - Vor dem Anlegen: Kostenschätzung und ausdrückliche Bestätigung mit "ja".
+    Eine Ausgabengrenze setzt ihr im RunPod-Konto (Limit der hinterlegten Karte),
+    nicht in diesem Skript.
   - Watchdog: systemd-run (oder nohup) terminiert den Pod nach --minuten.
   - Jeder Pod wird in results/kosten.csv verbucht.
   - Pro Lauf ein neuer VLLM_API_KEY (Regel 8), nur in runpod/.aktueller-pod.json
@@ -130,10 +131,6 @@ def verbuche(zeile: dict) -> None:
         schreiber.writerow({k: zeile.get(k, "") for k in felder})
 
 
-def budget() -> tuple[float, float]:
-    return float(einstellung("RUNPOD_BUDGET_USD", "100")), verbraucht()
-
-
 # ---------------------------------------------------------------------------
 # Watchdog: terminiert den Pod nach Ablauf der Zeit, auch wenn niemand zuschaut.
 # systemd-run überlebt das Schließen des Terminals; nohup ist der Notbehelf.
@@ -203,9 +200,9 @@ def befehl_gpus(_args) -> int:
     return 0
 
 
-def befehl_budget(_args) -> int:
-    gesamt, weg = budget()
-    print(f"Budget {gesamt:.2f} $, verbraucht {weg:.2f} $, Rest {gesamt - weg:.2f} $")
+def befehl_kosten(_args) -> int:
+    print(f"Bisher verbucht (results/kosten.csv): {verbraucht():.2f} $")
+    print("Maßgeblich ist die Abrechnung im RunPod-Konto (Billing).")
     return 0
 
 
@@ -222,14 +219,11 @@ def befehl_up(args) -> int:
     karten = int(profil.get("GPU_ANZAHL", "2"))
     minuten = args.minuten or int(einstellung("POD_MAX_MINUTES", str(STANDARD_MINUTEN[args.stufe])))
     schaetzung = PREIS_SCHAETZUNG_PRO_KARTE.get(cloud, 2.69) * karten * minuten / 60
-    gesamt, weg = budget()
 
     print(f"Profil:   {profil.name} ({profil.get('MODEL_ID') or profil.get('MODEL_QUELLE')})")
     print(f"Hardware: {karten}× {gpu_id or '?'}, {cloud}, mind. {profil.get('HOST_RAM_MIN_GB', '-')} GB RAM")
     print(f"Laufzeit: höchstens {minuten} Min. (Watchdog), geschätzt bis {schaetzung:.2f} $")
-    print(f"Budget:   {gesamt:.2f} $, verbraucht {weg:.2f} $, Rest {gesamt - weg:.2f} $")
-    if weg + schaetzung > gesamt:
-        probleme.append(f"Budget reicht nicht ({weg:.2f} + {schaetzung:.2f} > {gesamt:.2f} $)")
+    print(f"Bisher:   {verbraucht():.2f} $ verbucht (results/kosten.csv)")
 
     key = secrets.token_hex(24)
     disk = int(profil.get("DISK_GB") or max(100, int(float(profil.get("MODELL_GROESSE_GB") or 0) * 1.3) + 50))
@@ -495,7 +489,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     befehle = ap.add_subparsers(dest="befehl", required=True)
     befehle.add_parser("gpus").set_defaults(func=befehl_gpus)
-    befehle.add_parser("budget").set_defaults(func=befehl_budget)
+    befehle.add_parser("kosten").set_defaults(func=befehl_kosten)
     up = befehle.add_parser("up")
     up.add_argument("profil")
     up.add_argument("--stufe", choices=["schnell", "voll"], default="schnell")

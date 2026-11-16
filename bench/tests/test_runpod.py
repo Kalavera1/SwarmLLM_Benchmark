@@ -55,6 +55,9 @@ class TestPorts(unittest.TestCase):
 # Kostenbuch: verbuchen und aufsummieren
 # ---------------------------------------------------------------------------
 class TestKosten(unittest.TestCase):
+    def test_kein_budget_mehr(self):
+        self.assertFalse(hasattr(rp, "budget"))
+
     def test_verbuchen_und_summe(self):
         with tempfile.TemporaryDirectory() as ordner:
             datei = Path(ordner) / "kosten.csv"
@@ -67,6 +70,40 @@ class TestKosten(unittest.TestCase):
     def test_minuten_seit(self):
         self.assertAlmostEqual(rp.minuten_seit(None, ersatz=rp.time.time() - 600), 10, delta=0.1)
         self.assertGreater(rp.minuten_seit("2026-01-01T00:00:00Z", ersatz=0), 0)
+
+
+# ---------------------------------------------------------------------------
+# pin.py: Image-Referenzen zerlegen und Registry-Adressen bilden
+# ---------------------------------------------------------------------------
+_pin_spec = importlib.util.spec_from_file_location("pin", REPO / "profiles" / "pin.py")
+pin = importlib.util.module_from_spec(_pin_spec)
+_pin_spec.loader.exec_module(pin)
+
+
+class TestPinImage(unittest.TestCase):
+    def test_zerlegen(self):
+        faelle = {
+            "vllm/vllm-openai:v0.30.0": ("docker.io", "vllm/vllm-openai", "v0.30.0", "vllm/vllm-openai"),
+            "nginx": ("docker.io", "library/nginx", "latest", "nginx"),
+            "ghcr.io/local-inference-lab/vllm:release-10152026": (
+                "ghcr.io",
+                "local-inference-lab/vllm",
+                "release-10152026",
+                "ghcr.io/local-inference-lab/vllm",
+            ),
+            "localhost:5000/x/y": ("localhost:5000", "x/y", "latest", "localhost:5000/x/y"),
+        }
+        for ref, erwartet in faelle.items():
+            with self.subTest(ref=ref):
+                self.assertEqual(pin.zerlege_image(ref), erwartet)
+
+    def test_registry_urls(self):
+        token, manifest = pin.registry_urls("docker.io", "vllm/vllm-openai", "v0.30.0")
+        self.assertIn("auth.docker.io", token)
+        self.assertEqual(manifest, "https://registry-1.docker.io/v2/vllm/vllm-openai/manifests/v0.30.0")
+        token, manifest = pin.registry_urls("ghcr.io", "a/b", "t")
+        self.assertEqual(token, "https://ghcr.io/token?scope=repository:a/b:pull")
+        self.assertEqual(manifest, "https://ghcr.io/v2/a/b/manifests/t")
 
 
 if __name__ == "__main__":
