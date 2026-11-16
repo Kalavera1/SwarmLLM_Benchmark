@@ -61,7 +61,7 @@ flowchart LR
 |---|---|---|
 | RunPod | `python3 runpod/rp.py up <profil>` (automatisch, mit Kostenanzeige und Watchdog) | Modelle komplett im VRAM (Qwen, GLM) |
 | Google Cloud G4 | VM anlegen, dann `server/lokal-starten.sh <profil>` | wenn die CPU zählt: AMD EPYC Turin wie der Zielserver |
-| Vast.ai | Image und Startskript per Oberfläche | CPU-Modell vor dem Mieten sichtbar |
+| Vast.ai | Instanz mit vLLM-Image anlegen, dann `server/im-container-starten.sh <profil>` | Max-Q-Karten wie der Zielserver; CPU-Modell vor dem Mieten sichtbar |
 | Eigener Server | `server/lokal-starten.sh <profil>` | endgültige Messung auf der Zielhardware |
 
 **Optional: Chat-Zugang** – OpenWebUI mit LiteLLM als Gateway (Ordner `chat-stack/`, Docker-Swarm-Stack, auf einem beliebigen Linux-Rechner mit Docker), um ein Modell während eines Laufs selbst auszuprobieren. Für die Messungen nicht nötig; die Testsuite misst direkt gegen vLLM.
@@ -120,7 +120,8 @@ Quellen und Begründung: [Entscheidungslog](docs/entscheidungen.md).
 ```
 .
 ├── README.md
-├── ANLEITUNG.md        Schritt für Schritt: Messläufe vom Laptop aus
+├── ANLEITUNG.md        Schritt für Schritt: Messläufe vom Laptop aus (gemeinsame Teile)
+├── anleitung/          GPU-Server starten und abbauen, je Anbieter: RunPod, Google Cloud, Vast.ai, eigener Server
 ├── benchmark.conf.example  alle eigenen Werte (Kopie benchmark.conf, nicht im Repo)
 ├── CLAUDE.md           Arbeitsregeln für Claude-Sitzungen
 ├── .github/workflows/  CI: Secret-Scan, Pin-Prüfung, Linter
@@ -132,7 +133,7 @@ Quellen und Begründung: [Entscheidungslog](docs/entscheidungen.md).
 ├── chat-stack/         optional: Chat-Zugang mit LiteLLM + Mock-Server (Anleitung: chat-stack/README.md)
 ├── bench/              Testsuite (V-Modell), blockweise startbar (Anleitung: bench/README.md)
 ├── runpod/             RunPod automatisch: Pod anlegen, prüfen, löschen (Anleitung: runpod/README.md)
-├── server/             Startskript im Container (alle Wege), docker run für eigene Server und Cloud-VMs
+├── server/             Startskript im Container (alle Wege); Start per docker run oder direkt im Container
 ├── profiles/           ein Ordner pro Modell (Anleitung: profiles/README.md)
 ├── results/            Messergebnisse (JSON + Zusammenfassung), Messreihe v1
 └── archiv/             frühere Testläufe, unverändert, mit Steckbrief (Messreihe v0)
