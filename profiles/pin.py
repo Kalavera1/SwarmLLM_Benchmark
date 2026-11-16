@@ -28,7 +28,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from bench.konfig import ENV_DATEI, lies_env_datei  # noqa: E402 (Pfad muss vorher gesetzt sein)
+from bench.konfig import lies_einstellungen, lies_env_datei  # noqa: E402 (Pfad muss vorher gesetzt sein)
 
 USER_AGENT = "SwarmLLM_Benchmark-pin/1.0"
 
@@ -111,7 +111,7 @@ def main() -> int:
         if not quelle:
             print("FEHLER: MODEL_QUELLE fehlt im Profil.", file=sys.stderr)
             return 1
-        token = lies_env_datei(ENV_DATEI).get("HF_TOKEN", "")
+        token = lies_einstellungen().get("HF_TOKEN", "")
         sha, groesse = hf_revision(quelle, token)
         werte |= {"MODEL_ID": quelle, "MODEL_REVISION": sha, "MODELL_GROESSE_GB": str(groesse)}
         print(f"Modell: {quelle}@{sha} ({groesse} GB)")

@@ -4,7 +4,7 @@
 # Messungen vergleichbar sind.
 #
 # Aufruf (auf dem GPU-Server, im Repo-Ordner):
-#   server/lokal-starten.sh <profil>          starten
+#   server/lokal-starten.sh <profil>          starten (VLLM_API_KEY aus benchmark.conf)
 #   server/lokal-starten.sh <profil> stopp    Container beenden und entfernen
 #
 # Danach auf dem Rechner, der misst:
@@ -32,11 +32,13 @@ fi
 # ---------------------------------------------------------------------------
 # shellcheck disable=SC1090
 source "$DATEI"
-if [[ -f .env ]]; then
-  # nur die Werte, die hier gebraucht werden (kein blindes source der .env)
-  HF_TOKEN=$(grep -E '^HF_TOKEN=' .env | cut -d= -f2- || true)
-  VLLM_API_KEY=$(grep -E '^VLLM_API_KEY=' .env | cut -d= -f2- || true)
-fi
+# Eigene Werte: benchmark.conf, sonst .env (ältere Stände). Nur die Werte lesen,
+# die hier gebraucht werden – kein blindes source der Datei.
+KONF=benchmark.conf
+[[ -f "$KONF" ]] || KONF=.env
+wert() { grep -E "^$1=" "$KONF" 2>/dev/null | tail -1 | cut -d= -f2- | sed -e "s/^[\"']//" -e "s/[\"']$//"; }
+HF_TOKEN=$(wert HF_TOKEN)
+VLLM_API_KEY=$(wert VLLM_API_KEY)
 
 # Entwürfe (z. B. noch offener Weg) nicht starten
 [[ "${PROFIL_STATUS:-bereit}" == "bereit" ]] || { echo "FEHLER: Profil ist '${PROFIL_STATUS}' – siehe Kommentar im Profil." >&2; exit 1; }
@@ -45,9 +47,9 @@ fi
 [[ "${MODEL_REVISION:-}" =~ ^[0-9a-f]{40}$ ]] || { echo "FEHLER: Profil nicht gepinnt (profiles/pin.py $PROFIL)." >&2; exit 1; }
 [[ "${VLLM_IMAGE:-}" == *@sha256:* ]] || { echo "FEHLER: VLLM_IMAGE ohne Digest (profiles/pin.py $PROFIL)." >&2; exit 1; }
 
-# Regel 8: ohne Key kein Start. Derselbe Key steht in der .env des messenden Rechners.
+# Regel 8: ohne Key kein Start. Derselbe Key steht in der benchmark.conf des Steuerrechners.
 [[ -n "${VLLM_API_KEY:-}" ]] || {
-  echo "FEHLER: VLLM_API_KEY fehlt in .env. Erzeugen mit: openssl rand -hex 24" >&2
+  echo "FEHLER: VLLM_API_KEY fehlt in benchmark.conf. Erzeugen mit: openssl rand -hex 24" >&2
   exit 1
 }
 

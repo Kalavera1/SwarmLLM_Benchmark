@@ -81,6 +81,8 @@ Ordner entstehen erst in der Phase, in der sie gebraucht werden.
 ```
 .
 ├── README.md
+├── ANLEITUNG.md        Schritt für Schritt: Messläufe vom Laptop aus
+├── benchmark.conf.example  alle eigenen Werte (Kopie benchmark.conf, nicht im Repo)
 ├── CLAUDE.md           Arbeitsregeln für Claude-Sitzungen
 ├── .env.example        Vorlage für Zugangsdaten (echte Werte nur in .env)
 ├── .github/workflows/  CI: Secret-Scan, Pin-Prüfung, Linter

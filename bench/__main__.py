@@ -41,7 +41,9 @@ def befehl_run(args) -> int:
     profil = lade_profil(args.profil)
     ziel = ziel_aufloesen(profil, args.ziel, args.ueber_gateway)
     if profil.key_pflicht and not ziel.api_key:
-        print("FEHLER: kein API-Key gefunden (VLLM_API_KEY in .env oder Pod-Datei). Regel 8.", file=sys.stderr)
+        print(
+            "FEHLER: kein API-Key gefunden (VLLM_API_KEY in benchmark.conf oder Pod-Datei). Regel 8.", file=sys.stderr
+        )
         return 2
 
     ctx = Kontext(profil=profil, ziel=ziel, client=Client(ziel.basis_url, ziel.api_key, ziel.modell), stufe=args.stufe)
