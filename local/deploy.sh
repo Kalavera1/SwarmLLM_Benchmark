@@ -50,7 +50,13 @@ secret_fehlt() { ! docker secret inspect "$1" >/dev/null 2>&1; }
 
 if secret_fehlt litellm_master_key; then
   [[ -f ../.env ]] || fehler "../.env fehlt. Vorlage: cp ../.env.example ../.env, dann LITELLM_MASTER_KEY setzen."
-  MASTER_KEY=$(grep -E '^LITELLM_MASTER_KEY=' ../.env | cut -d= -f2- || true)
+  # Steht die Zeile mehrfach drin (z. B. leere Vorlage + Wert angehängt), gilt
+  # die letzte. Anführungszeichen, Leerzeichen und Windows-Zeilenenden (\r)
+  # werden entfernt, damit sie nicht ins Secret wandern.
+  anzahl=$(grep -cE '^LITELLM_MASTER_KEY=' ../.env || true)
+  [[ "$anzahl" -le 1 ]] \
+    || echo "WARNUNG: LITELLM_MASTER_KEY steht ${anzahl}-mal in ../.env – verwendet wird die letzte Zeile."
+  MASTER_KEY=$(grep -E '^LITELLM_MASTER_KEY=' ../.env | tail -n1 | cut -d= -f2- | tr -d "\r\"' \t" || true)
   [[ ${#MASTER_KEY} -ge 24 ]] \
     || fehler "LITELLM_MASTER_KEY in ../.env fehlt oder ist kürzer als 24 Zeichen. Erzeugen mit: echo \"sk-\$(openssl rand -hex 24)\""
   printf '%s' "$MASTER_KEY" | docker secret create litellm_master_key - >/dev/null
