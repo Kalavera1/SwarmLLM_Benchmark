@@ -47,11 +47,42 @@ Optional für die ABAP-Syntaxprüfung: Node.js (`sudo apt install -y nodejs npm`
 
 ```bash
 cp benchmark.conf.example benchmark.conf
-openssl rand -hex 24               # Ausgabe als VLLM_API_KEY eintragen
-nano benchmark.conf                # oder ein anderer Editor
+chmod 600 benchmark.conf           # nur du darfst die Datei lesen
+nano benchmark.conf                # HF_TOKEN und RUNPOD_API_KEY eintragen
 ```
 
-Mindestens eintragen: `VLLM_API_KEY`, `HF_TOKEN`, `RUNPOD_API_KEY`. Die Kommentare in der Datei erklären jeden Wert. `benchmark.conf` kommt nie ins Repo.
+Die Kommentare in der Datei erklären jeden Wert. `benchmark.conf` kommt nie ins Repo.
+
+#### Der vLLM-Key (`VLLM_API_KEY`) – wann du ihn brauchst
+
+Der vLLM-Key schützt den GPU-Server: Ohne ihn wäre vLLM offen im Internet erreichbar, und jeder könnte auf deine Kosten rechnen (Regel 8).
+
+| Weg | Was du tun musst |
+|---|---|
+| **RunPod** mit `rp.py` | **Nichts.** `rp.py` erzeugt für jeden Pod einen eigenen Key und gibt ihn der Testsuite automatisch weiter. |
+| **Vast.ai, Google Cloud, eigener Server** | **Wichtig:** Key einmal erzeugen. Derselbe Key muss auf dem Laptop **und** auf dem GPU-Server in `benchmark.conf` stehen, sonst antwortet der Server mit HTTP 401. |
+
+Key erzeugen und direkt eintragen, ohne Kopieren:
+
+```bash
+sed -i "s/^VLLM_API_KEY=.*/VLLM_API_KEY=$(openssl rand -hex 24)/" benchmark.conf
+grep -c '^VLLM_API_KEY=.\{48\}$' benchmark.conf    # Kontrolle: muss 1 ausgeben
+```
+
+Auf den GPU-Server kommt der Key, indem du dort dieselbe Zeile in dessen `benchmark.conf` einträgst (bei Vast.ai als Umgebungsvariable `VLLM_API_KEY`). Den Key nie per Chat, Ticket oder E-Mail weitergeben.
+
+#### Ausblick: Schlüssel im späteren Betrieb mit LiteLLM
+
+Für die Messungen reicht der vLLM-Key. Kommt später LiteLLM als Gateway für OpenWebUI und weitere Nutzer dazu (`chat-stack/`), gibt es mehrere Schlüssel mit getrennten Aufgaben:
+
+| Schlüssel | Wofür | Wichtig |
+|---|---|---|
+| `VLLM_API_KEY` | LiteLLM → vLLM | kennt nur LiteLLM, kein Nutzer |
+| `LITELLM_MASTER_KEY` | Admin-Zugang zu LiteLLM, erzeugt weitere Keys | muss mit `sk-` beginnen; nur für Admins |
+| `LITELLM_SALT_KEY` | verschlüsselt in der Datenbank gespeicherte Zugangsdaten (z. B. den vLLM-Key) | **vor dem ersten Modell setzen und danach nie ändern** – sonst sind die gespeicherten Daten nicht mehr lesbar. Ohne eigenen Salt-Key nimmt LiteLLM den Master-Key, dann darf auch der nie geändert werden |
+| Virtuelle Keys | je Nutzer, Team oder Anwendung, mit Budget und Modellfreigaben | erzeugt per Master-Key; braucht eine PostgreSQL-Datenbank |
+
+Quellen: LiteLLM-Doku zu [Verschlüsselung und Salt-Key](https://docs.litellm.ai/docs/proxy/security_encryption_faq) und [virtuellen Keys](https://docs.litellm.ai/docs/proxy/virtual_keys). Der heutige `chat-stack/` nutzt nur den Master-Key; Salt-Key, Datenbank und virtuelle Keys kommen erst mit dem Betrieb dazu.
 
 ### 1.4 GPU-Typ ermitteln [Laptop]
 
@@ -247,6 +278,6 @@ Wie Google Cloud, Schritte 3 und 4 – nur auf dem eigenen Server und ohne Koste
 | `Profil nicht gepinnt` | Teil 2 |
 | `pin.py`: Hugging Face antwortet mit 401/403/404 | Repo-Name im Profil oder `HF_TOKEN` prüfen; manche Modelle muss man auf Hugging Face erst freischalten |
 | `rp.py warten` zeigt `fehler: P2P …` | Host verwerfen: `rp.py down`, neu anlegen |
-| Testsuite meldet HTTP 401 | Laptop und Server nutzen verschiedene `VLLM_API_KEY` (gilt für Teil 4) |
+| Testsuite meldet HTTP 401 | Laptop und Server nutzen verschiedene `VLLM_API_KEY` (gilt für Teil 4, siehe 1.3) |
 | Keine Verbindung zu Port 8000 | Port-Freigabe bzw. Firewall beim Anbieter prüfen |
 | Laptop war zugeklappt | Im Dashboard des Anbieters nachsehen, ob der Server noch läuft, und ihn löschen |
