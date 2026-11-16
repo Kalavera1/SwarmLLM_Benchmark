@@ -25,3 +25,6 @@ ignore = [
 # ---------------------------------------------------------------------------
 [lint.per-file-ignores]
 "**/test_*.py" = ["S101"]
+# Testsuite: random erzeugt reproduzierbare Testdaten (Texte, Bilder, Pausen),
+# keine Schlüssel oder Passwörter – S311 (Krypto-Zufall) trifft hier nicht zu.
+"bench/**" = ["S311"]

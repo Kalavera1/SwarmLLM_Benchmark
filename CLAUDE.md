@@ -20,6 +20,7 @@ Diese Datei lädt jede Claude-Sitzung automatisch, auch in Claude Code. Sie erg�
 - **Vor jedem Pull Request lokal prüfen** – dieselben Prüfungen wie die CI:
   ```bash
   python3 -m unittest discover -s ci -v
+  python3 -m unittest discover -s bench/tests -t . -v
   python3 ci/check_pins.py
   ruff check . && ruff format --check .
   git ls-files '*.sh' | xargs -r shellcheck -x

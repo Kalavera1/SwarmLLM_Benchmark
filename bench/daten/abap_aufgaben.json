@@ -1,0 +1,104 @@
+{
+  "_kommentar": "ABAP-Eval: 7 Aufgaben wie im B300-Test (ALV, ABAP-SQL, CDS, RAP, Fehlersuche, Modernisierung, AMDP). Jede Aufgabe hat eine feste Kriterienliste (regulärer Ausdruck, Groß-/Kleinschreibung egal). 'verboten': true heißt, das Muster darf im Code NICHT vorkommen. 'dateityp' bestimmt, wie abaplint den Code prüft (prog, clas, ddls) oder ob nur die Kriterien zählen (keiner).",
+  "aufgaben": [
+    {
+      "id": "alv",
+      "titel": "ALV-Report mit CL_SALV_TABLE",
+      "dateityp": "prog",
+      "prompt": "Schreibe einen vollständigen ABAP-Report ZBENCH_ALV, der Flugdaten aus der Tabelle SFLIGHT liest (Selektionsbild mit der Fluggesellschaft CARRID als Select-Option) und mit CL_SALV_TABLE als ALV anzeigt. Behandle Ausnahmen sauber. Gib den Code in einem ```abap-Block aus.",
+      "kriterien": [
+        {"beschreibung": "REPORT-Anweisung", "muster": "\\bREPORT\\s+zbench_alv"},
+        {"beschreibung": "Selektionsbild mit CARRID", "muster": "SELECT-OPTIONS\\s*:?\\s*\\w+\\s+FOR\\s+\\w*-?carrid"},
+        {"beschreibung": "Liest SFLIGHT", "muster": "FROM\\s+sflight"},
+        {"beschreibung": "Factory-Methode von CL_SALV_TABLE", "muster": "cl_salv_table\\s*=>\\s*factory"},
+        {"beschreibung": "Fängt CX_SALV_MSG", "muster": "CATCH\\s+cx_salv_msg"},
+        {"beschreibung": "Ruft display auf", "muster": "->\\s*display\\s*\\("}
+      ]
+    },
+    {
+      "id": "sql",
+      "titel": "Modernes ABAP-SQL mit Aggregation",
+      "dateityp": "prog",
+      "prompt": "Schreibe eine Abfrage in modernem ABAP-SQL (Release 7.50 oder neuer), die je Kunde aus SCUSTOM die Anzahl der Buchungen aus SBOOK und die Summe des Feldes LOCCURAM ermittelt. Nur Kunden mit mehr als 5 Buchungen, absteigend sortiert nach der Summe. Verwende Inline-Deklaration und Host-Variablen mit @. Gib den Code in einem ```abap-Block aus.",
+      "kriterien": [
+        {"beschreibung": "Join SCUSTOM/SBOOK", "muster": "JOIN\\s+(scustom|sbook)"},
+        {"beschreibung": "COUNT", "muster": "COUNT\\s*\\("},
+        {"beschreibung": "SUM über LOCCURAM", "muster": "SUM\\s*\\(\\s*\\w*~?loccuram"},
+        {"beschreibung": "GROUP BY", "muster": "GROUP\\s+BY"},
+        {"beschreibung": "HAVING mit mehr als 5", "muster": "HAVING\\s+COUNT[^.]*>\\s*5"},
+        {"beschreibung": "Absteigend sortiert", "muster": "ORDER\\s+BY[^.]*DESCENDING"},
+        {"beschreibung": "Inline-Deklaration mit @DATA", "muster": "@DATA\\s*\\("}
+      ]
+    },
+    {
+      "id": "cds",
+      "titel": "CDS View Entity mit Assoziation",
+      "dateityp": "ddls",
+      "prompt": "Schreibe eine CDS View Entity ZI_BENCH_FLIGHT (define view entity) auf der Tabelle SFLIGHT mit einer Assoziation zur Fluggesellschaft SCARR. Felder: CARRID, CONNID, FLDATE, PRICE und CURRENCY, wobei PRICE die passende Währungs-Annotation bekommt. Setze die Annotation für die Berechtigungsprüfung. Gib nur den CDS-Quelltext in einem ```cds-Block aus.",
+      "kriterien": [
+        {"beschreibung": "define view entity", "muster": "define\\s+view\\s+entity\\s+zi_bench_flight"},
+        {"beschreibung": "Assoziation zu SCARR", "muster": "association\\s+(\\[[^\\]]*\\]\\s*)?to\\s+scarr"},
+        {"beschreibung": "Währungs-Annotation", "muster": "@Semantics\\.amount\\.currencyCode"},
+        {"beschreibung": "Berechtigungs-Annotation", "muster": "@AccessControl\\.authorizationCheck"},
+        {"beschreibung": "Schlüsselfelder", "muster": "key\\s+\\w*\\.?carrid"}
+      ]
+    },
+    {
+      "id": "rap",
+      "titel": "RAP Behavior Definition mit Validierung",
+      "dateityp": "keiner",
+      "prompt": "Schreibe eine RAP Behavior Definition (managed) für die Root-Entity ZI_BENCH_TRAVEL mit create, update und delete, einer Validierung validateDates beim Speichern und einer Determination setStatus bei Änderung. Schreibe außerdem die Methode validateDates in der Behavior-Implementierungsklasse, die prüft, dass das Enddatum nicht vor dem Startdatum liegt, und Fehler über failed und reported meldet. Gib den Code in ```abap-Blöcken aus.",
+      "kriterien": [
+        {"beschreibung": "managed mit Implementierungsklasse", "muster": "managed\\s+implementation\\s+in\\s+class"},
+        {"beschreibung": "define behavior for", "muster": "define\\s+behavior\\s+for\\s+zi_bench_travel"},
+        {"beschreibung": "create, update, delete", "muster": "create\\s*;[\\s\\S]*update\\s*;[\\s\\S]*delete\\s*;"},
+        {"beschreibung": "Validierung beim Speichern", "muster": "validation\\s+validateDates\\s+on\\s+save"},
+        {"beschreibung": "Determination bei Änderung", "muster": "determination\\s+setStatus\\s+on\\s+modify"},
+        {"beschreibung": "Methode validateDates", "muster": "METHOD\\s+validatedates"},
+        {"beschreibung": "Meldet über failed", "muster": "failed-"},
+        {"beschreibung": "Meldet über reported", "muster": "reported-"}
+      ]
+    },
+    {
+      "id": "fehlersuche",
+      "titel": "Fehler in bestehendem Code finden",
+      "dateityp": "keiner",
+      "prompt": "Finde alle Fehler und Schwachstellen in diesem ABAP-Code und erkläre sie. Gib danach eine korrigierte Fassung in einem ```abap-Block aus.\n\n```abap\nREPORT zbench_fehler.\nDATA: lt_flights TYPE TABLE OF sflight,\n      ls_flight  TYPE sflight,\n      lv_sum     TYPE p DECIMALS 2.\nSELECT * FROM sflight INTO TABLE lt_flights WHERE carrid = 'LH'.\nLOOP AT lt_flights INTO ls_flight.\n  SELECT SINGLE * FROM scarr INTO @DATA(ls_carr) WHERE carrid = @ls_flight-carrid.\n  lv_sum = lv_sum + ls_flight-price.\nENDLOOP.\nREAD TABLE lt_flights INTO ls_flight INDEX 1.\nWRITE: / ls_flight-connid.\nDATA(lv_avg) = lv_sum / lines( lt_flights ).\nWRITE: / lv_avg.\n```",
+      "kriterien": [
+        {"beschreibung": "SELECT in der Schleife erkannt", "muster": "(SELECT[^.\\n]{0,80}(in|innerhalb)\\s+(der|einer)\\s+(LOOP|Schleife))|((LOOP|Schleife)[^.\\n]{0,80}SELECT)"},
+        {"beschreibung": "Division durch null erkannt", "muster": "(Division\\s+durch\\s+(null|0))|(durch\\s+null)|(lines\\s*\\(\\s*lt_flights\\s*\\)\\s*(=|>|IS)\\s*)"},
+        {"beschreibung": "fehlende sy-subrc-Prüfung", "muster": "sy-subrc"},
+        {"beschreibung": "SELECT * statt Feldliste", "muster": "(SELECT\\s+\\*)[^\\n]{0,120}(Feld|Spalten)|(Feldliste)"},
+        {"beschreibung": "ungenutzte Variable ls_carr", "muster": "ls_carr[^\\n]{0,120}(nicht\\s+(verwendet|genutzt|benutzt)|ungenutzt|überflüssig)"}
+      ]
+    },
+    {
+      "id": "modernisierung",
+      "titel": "Alten Code modernisieren",
+      "dateityp": "prog",
+      "prompt": "Modernisiere diesen ABAP-Code auf ABAP 7.5x (Inline-Deklarationen, neues SQL mit Host-Variablen, String-Templates, Tabellenausdrücke). Das Verhalten soll gleich bleiben. Gib den Code in einem ```abap-Block aus.\n\n```abap\nDATA: lt_tab  TYPE TABLE OF scarr,\n      ls_tab  TYPE scarr,\n      lv_name TYPE string.\nSELECT * FROM scarr INTO TABLE lt_tab.\nLOOP AT lt_tab INTO ls_tab.\n  IF ls_tab-carrid = 'LH'.\n    MOVE ls_tab-carrname TO lv_name.\n    CONCATENATE 'Name:' lv_name INTO lv_name SEPARATED BY space.\n  ENDIF.\nENDLOOP.\nWRITE lv_name.\n```",
+      "kriterien": [
+        {"beschreibung": "Inline-Deklaration", "muster": "DATA\\s*\\("},
+        {"beschreibung": "Host-Variable mit @", "muster": "INTO\\s+TABLE\\s+@"},
+        {"beschreibung": "String-Template", "muster": "\\|[^|\\n]*\\{[^}\\n]*\\}[^|\\n]*\\|"},
+        {"beschreibung": "Tabellenausdruck oder WHERE statt IF in der Schleife", "muster": "(\\w+\\[\\s*carrid\\s*=)|(WHERE\\s+carrid\\s*=)"},
+        {"beschreibung": "kein MOVE mehr", "muster": "\\bMOVE\\b", "verboten": true},
+        {"beschreibung": "kein CONCATENATE mehr", "muster": "\\bCONCATENATE\\b", "verboten": true}
+      ]
+    },
+    {
+      "id": "amdp",
+      "titel": "AMDP mit SQLScript",
+      "dateityp": "clas",
+      "prompt": "Schreibe eine globale ABAP-Klasse ZCL_BENCH_AMDP mit einer AMDP-Methode GET_TOP_CUSTOMERS, die per SQLScript die 10 Kunden mit dem höchsten Umsatz (Summe von LOCCURAM aus SBOOK) als Tabelle zurückgibt. Gib Definition und Implementierung in einem ```abap-Block aus.",
+      "kriterien": [
+        {"beschreibung": "AMDP-Marker-Interface", "muster": "INTERFACES\\s+if_amdp_marker_hdb"},
+        {"beschreibung": "Implementierung als Datenbankprozedur", "muster": "BY\\s+DATABASE\\s+PROCEDURE\\s+FOR\\s+HDB\\s+LANGUAGE\\s+SQLSCRIPT"},
+        {"beschreibung": "USING sbook", "muster": "USING\\s+sbook"},
+        {"beschreibung": "Top 10", "muster": "(LIMIT\\s+10)|(TOP\\s+10)"},
+        {"beschreibung": "absteigend sortiert", "muster": "ORDER\\s+BY[^;]*DESC"},
+        {"beschreibung": "Summe LOCCURAM", "muster": "SUM\\s*\\(\\s*\\w*\\.?\"?loccuram"}
+      ]
+    }
+  ]
+}
