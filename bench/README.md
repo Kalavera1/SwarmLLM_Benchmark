@@ -63,7 +63,7 @@ python3 -m bench auswertung --speichern                  # Vergleichstabelle
 
 ```bash
 python3 -m unittest discover -s bench/tests -t . -v                  # wie in der CI
-python3 local/mock/mock_openai.py --host 127.0.0.1 --port 8000 &
+python3 chat-stack/mock/mock_openai.py --host 127.0.0.1 --port 8000 &
 python3 -m bench run alle --profil mock --weiter
 ```
 

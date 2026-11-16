@@ -64,7 +64,7 @@ flowchart LR
 | Vast.ai | Image und Startskript per Oberfläche | CPU-Modell vor dem Mieten sichtbar |
 | Eigener Server | `server/lokal-starten.sh <profil>` | endgültige Messung auf der Zielhardware |
 
-**Optional: Chat-Zugang** – OpenWebUI mit LiteLLM als Gateway (Ordner `local/`, Docker-Swarm-Stack), um ein Modell während eines Laufs selbst auszuprobieren. Für die Messungen nicht nötig; die Testsuite misst direkt gegen vLLM.
+**Optional: Chat-Zugang** – OpenWebUI mit LiteLLM als Gateway (Ordner `chat-stack/`, Docker-Swarm-Stack, auf einem beliebigen Linux-Rechner mit Docker), um ein Modell während eines Laufs selbst auszuprobieren. Für die Messungen nicht nötig; die Testsuite misst direkt gegen vLLM.
 
 Warum so:
 - **Das vLLM-Image direkt als Container**, nicht von Hand installiert: Die Handinstallation scheiterte beim B300-Test an CUDA- und PyTorch-Versionen. In RunPod-Pods gibt es außerdem kein eigenes Docker.
@@ -101,26 +101,23 @@ Warum diese Auswahl und Reihenfolge: siehe [Entscheidungslog](docs/entscheidunge
 
 ## Struktur
 
-Ordner entstehen erst in der Phase, in der sie gebraucht werden.
-
 ```
 .
 ├── README.md
 ├── ANLEITUNG.md        Schritt für Schritt: Messläufe vom Laptop aus
 ├── benchmark.conf.example  alle eigenen Werte (Kopie benchmark.conf, nicht im Repo)
 ├── CLAUDE.md           Arbeitsregeln für Claude-Sitzungen
-├── .env.example        Vorlage nur für den optionalen Chat-Stack in local/
 ├── .github/workflows/  CI: Secret-Scan, Pin-Prüfung, Linter
 ├── ci/                 Prüfskripte der CI mit Unit-Tests
 ├── docs/
 │   ├── roadmap.md      Phasen, Ergebnisse, Review-Kriterien
 │   ├── entscheidungen.md
 │   └── erfahrungen.md  Lehren aus früheren Tests
-├── local/              optional: Chat-Stack mit LiteLLM + Mock-Server (Anleitung: local/README.md)
-├── bench/              Phase 2: Testsuite (V-Modell), blockweise startbar
+├── chat-stack/         optional: Chat-Zugang mit LiteLLM + Mock-Server (Anleitung: chat-stack/README.md)
+├── bench/              Testsuite (V-Modell), blockweise startbar (Anleitung: bench/README.md)
 ├── runpod/             RunPod automatisch: Pod anlegen, prüfen, löschen (Anleitung: runpod/README.md)
 ├── server/             Startskript im Container (alle Wege), docker run für eigene Server und Cloud-VMs
-├── profiles/           Phase 4+: ein Ordner pro Modell
+├── profiles/           ein Ordner pro Modell (Anleitung: profiles/README.md)
 ├── results/            Messergebnisse (JSON + Zusammenfassung), Messreihe v1
 └── archiv/             frühere Testläufe, unverändert, mit Steckbrief (Messreihe v0)
 ```

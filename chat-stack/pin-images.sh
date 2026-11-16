@@ -2,7 +2,7 @@
 # Lädt das LiteLLM-Image per Tag, liest den Digest aus und trägt die
 # gepinnte Referenz in images.env ein (Regel 4: Alles gepinnt).
 #
-# Aufruf (auf dem Mediaserver):  ./pin-images.sh [TAG]
+# Aufruf (auf einem Rechner mit Docker):  ./pin-images.sh [TAG]
 # Standard-Tag: v1.106.6 (siehe images.env)
 set -euo pipefail
 cd "$(dirname "$0")"

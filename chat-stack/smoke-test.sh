@@ -3,7 +3,7 @@
 #
 # Aufruf:  ./smoke-test.sh [BASIS-URL]
 #   Standard-URL: http://127.0.0.1:4000
-#   Master-Key aus LITELLM_MASTER_KEY (Umgebung) oder ../.env
+#   Master-Key aus LITELLM_MASTER_KEY (Umgebung) oder ../benchmark.conf (ältere Stände: ../.env)
 #
 # Exit-Code 0 nur, wenn alle Prüfungen bestehen.
 set -euo pipefail
@@ -11,15 +11,17 @@ cd "$(dirname "$0")"
 
 # ---------------------------------------------------------------------------
 # Eingaben: Ziel-URL und Master-Key
-# Der Key kommt aus der Umgebung oder aus ../.env, nie aus dem Skript selbst.
+# Der Key kommt aus der Umgebung oder aus ../benchmark.conf, nie aus dem Skript selbst.
 # ---------------------------------------------------------------------------
 BASIS="${1:-http://127.0.0.1:4000}"
-if [[ -z "${LITELLM_MASTER_KEY:-}" && -f ../.env ]]; then
+KONF=../benchmark.conf
+[[ -f "$KONF" ]] || KONF=../.env
+if [[ -z "${LITELLM_MASTER_KEY:-}" && -f "$KONF" ]]; then
   # wie in deploy.sh: letzte Zeile gilt, Anführungszeichen/Leerzeichen/\r weg
-  LITELLM_MASTER_KEY=$(grep -E '^LITELLM_MASTER_KEY=' ../.env | tail -n1 | cut -d= -f2- | tr -d "\r\"' \t" || true)
+  LITELLM_MASTER_KEY=$(grep -E '^LITELLM_MASTER_KEY=' "$KONF" | tail -n1 | cut -d= -f2- | tr -d "\r\"' \t" || true)
 fi
 [[ -n "${LITELLM_MASTER_KEY:-}" ]] || {
-  echo "FEHLER: LITELLM_MASTER_KEY nicht gesetzt (Umgebung oder ../.env)." >&2
+  echo "FEHLER: LITELLM_MASTER_KEY nicht gesetzt (Umgebung oder ../benchmark.conf)." >&2
   exit 1
 }
 

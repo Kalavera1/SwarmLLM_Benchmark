@@ -6,11 +6,11 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 | Phase | Ziel | Kosten (geschätzt) | Status |
 |---|---|---|---|
-| 0 | Repo-Grundgerüst | 0 € | in Review |
-| 0b | CI und Arbeitsregeln | 0 € | in Review |
-| 1 | Lokaler Stack | 0 € | in Review, Test auf dem Mediaserver offen |
-| 2 | Testsuite | 0 € | in Arbeit |
-| 3 | RunPod-Skripte und Modellprofile | 0 € | in Arbeit |
+| 0 | Repo-Grundgerüst | 0 € | erledigt |
+| 0b | CI und Arbeitsregeln | 0 € | erledigt |
+| 1 | Optional: Chat-Stack (LiteLLM, OpenWebUI) | 0 € | optional, für Messungen nicht nötig; Test offen |
+| 2 | Testsuite | 0 € | in Review |
+| 3 | Startskripte, RunPod-Steuerung, Modellprofile, `benchmark.conf` | 0 € | in Review |
 | 4 | Erster GPU-Test mit Qwen3.8-27B | ca. 1 h ≈ 4 $ | offen |
 | 5 | Qwen3.8-Flash-Next | 3–5 h ≈ 10–16 $ | offen |
 | 6 | GLM-5.3-Flash | 3–5 h ≈ 10–16 $ | offen |
@@ -22,7 +22,7 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 ## Phase 0 – Repo-Grundgerüst
 
-**Ergebnis:** README mit Ziel und Regeln, `.gitignore`, `.env.example`, Roadmap, Entscheidungslog.
+**Ergebnis:** README mit Ziel und Regeln, `.gitignore`, Vorlage für Zugangsdaten (heute `benchmark.conf.example`), Roadmap, Entscheidungslog.
 
 **Fertig, wenn:** reviewt und gepusht.
 
@@ -37,13 +37,15 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 **Fertig, wenn:** Die CI läuft im Pull Request grün, und ein absichtlich eingebauter Verstoß wird erkannt (lokal nachgewiesen).
 
-## Phase 1 – Lokaler Stack
+## Phase 1 – Optional: Chat-Stack
 
-**Ergebnis:** `local/` mit einem Docker-Swarm-Stack (Single-Node auf dem Mediaserver) für LiteLLM und einen Mock-Server, der die OpenAI-API nachahmt – noch keine GPU. Der LiteLLM-Master-Key liegt als Docker Secret vor, nicht in einer Datei im Repo. Die bestehende OpenWebUI (Port 8081, Compose) bleibt unverändert und bekommt LiteLLM nur als zusätzliche OpenAI-Verbindung.
+**Für die Messungen nicht nötig.** Die Testsuite misst direkt gegen vLLM und startet den Mock selbst. Der Stack ist für zwei Dinge gedacht: ein Modell während eines Laufs im Chat ausprobieren, und als Vorlage für den späteren Betrieb mit OpenWebUI auf dem Zielserver.
 
-**Wichtig:** Aus dem OpenWebUI-Container heißt `localhost` der Container selbst, nicht der Mediaserver. Die Verbindung geht deshalb über die LAN-IP des Mediaservers oder `host.docker.internal`.
+**Ergebnis:** `chat-stack/` mit einem Docker-Swarm-Stack (Single-Node, beliebiger Linux-Rechner mit Docker) für LiteLLM und einen Mock-Server, der die OpenAI-API nachahmt. Der LiteLLM-Master-Key liegt als Docker Secret vor, nicht in einer Datei im Repo. Eine vorhandene OpenWebUI bekommt LiteLLM nur als zusätzliche OpenAI-Verbindung.
 
-**Fertig, wenn:** `docker stack deploy` läuft durch, alle Services sind gesund, und ein Chat in der bestehenden OpenWebUI geht über LiteLLM zum Mock und zurück.
+**Wichtig:** Aus dem OpenWebUI-Container heißt `localhost` der Container selbst, nicht der Host. Die Verbindung geht deshalb über die LAN-IP des Docker-Rechners oder `host.docker.internal`.
+
+**Fertig, wenn:** `docker stack deploy` läuft durch, alle Services sind gesund, und ein Chat in OpenWebUI geht über LiteLLM zum Mock und zurück.
 
 ## Phase 2 – Testsuite
 
@@ -68,9 +70,11 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 **Fertig, wenn:** Alle Blöcke laufen einzeln gegen den Mock, die Unit-Tests sind grün, und jedes Ergebnis ist ein gültiges JSON mit Metadaten.
 
-## Phase 3 – RunPod-Skripte und Modellprofile
+## Phase 3 – Startskripte, RunPod-Steuerung, Modellprofile
 
 **Ergebnis:**
+- `server/start-im-container.sh`: ein Startskript für alle GPU-Server (RunPod, Cloud-VM, Vast.ai, eigener Server) mit Host-Check (P2P, CPU, RAM-Bandbreite, Power-Limit); `server/lokal-starten.sh` für Rechner mit Docker.
+- `benchmark.conf` für alle eigenen Werte und `ANLEITUNG.md` für den Ablauf von einem beliebigen Steuerrechner aus.
 - `runpod/` für die REST-API v2: GPU-Typen anzeigen, Pod anlegen, prüfen, Status, löschen. Ohne Network Volume: Der Pod lädt die gepinnte Revision beim Start selbst.
 - Budgetgrenze: Vor jedem Start Kostenschätzung und Abbruch, wenn das Restbudget nicht reicht. Jeder Pod wird mit tatsächlichen Kosten in `results/kosten.csv` verbucht.
 - Watchdog auf dem Steuerrechner, der den Pod nach `POD_MAX_MINUTES` terminiert.

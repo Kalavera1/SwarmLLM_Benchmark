@@ -5,7 +5,7 @@ Diese Datei l채dt jede Claude-Sitzung automatisch, auch in Claude Code. Sie erg�
 ## Projektregeln (Kurzfassung, verbindlich)
 
 1. Strikt isoliert: kein Code, keine Configs, keine Zugangsdaten aus anderen Stack-Projekten.
-2. Keine Secrets im Repo. Skripte lesen Zugangsdaten aus `.env`, der Swarm-Stack aus Docker Secrets.
+2. Keine Secrets im Repo. Skripte lesen Zugangsdaten aus `benchmark.conf`, der optionale Chat-Stack aus Docker Secrets.
 3. Keine Gewichte, Caches oder Container-Layer im Repo.
 4. Alles gepinnt: Images per `@sha256:`-Digest, Modelle per Commit-Hash, GitHub Actions per Commit-SHA.
 5. Kein GPU-Lauf ohne Auto-Stopp (Watchdog, Pod wird terminiert, nicht nur gestoppt).
@@ -37,6 +37,6 @@ Diese Datei l채dt jede Claude-Sitzung automatisch, auch in Claude Code. Sie erg�
 
 ## Grenzen
 
-- **Kein Zugriff auf den Mediaserver.** Befehle, die dort laufen m체ssen, als nachvollziehbare Schritt-f체r-Schritt-Anleitung liefern; der Nutzer f체hrt sie aus.
+- **Kein Zugriff auf Steuerrechner und GPU-Server.** Befehle, die dort laufen m체ssen, als nachvollziehbare Schritt-f체r-Schritt-Anleitung liefern; der Nutzer f체hrt sie aus.
 - **Nichts, was Geld kostet, ohne ausdr체ckliche Freigabe:** keinen Pod und kein Volume anlegen, keinen Lauf starten.
-- **Keine Docker-Registry von hier aus erreichbar.** Image-Digests liefert der Nutzer vom Mediaserver (`docker inspect --format '{{index .RepoDigests 0}}' <image>`).
+- **Keine Docker-Registry von hier aus erreichbar.** Image-Digests liefert der Nutzer (`profiles/pin.py` oder `docker inspect --format '{{index .RepoDigests 0}}' <image>`).
