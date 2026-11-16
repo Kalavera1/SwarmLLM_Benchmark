@@ -1,7 +1,6 @@
 # Zugangsdaten – niemals committen
 .env
 .env.*
-!.env.example
 *.pem
 *.key
 id_rsa*
@@ -42,7 +41,7 @@ venv/
 # Logs und lokale Daten
 *.log
 logs/
-local/data/
+chat-stack/data/
 
 # Editor und Betriebssystem
 .vscode/

@@ -29,7 +29,7 @@ def meldungen(datei: str, text: str) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# Images in YAML-Dateien (z. B. local/stack.yml)
+# Images in YAML-Dateien (z. B. chat-stack/stack.yml)
 #
 # Durchgehen darf nur ein Image mit @sha256-Digest. Ein Tag allein (auch
 # "latest") ist ein Verstoß. Erlaubt bleiben Variablen wie ${LITELLM_IMAGE}
@@ -38,22 +38,22 @@ def meldungen(datei: str, text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 class ImagesInYaml(unittest.TestCase):
     def test_digest_ist_ok(self):
-        self.assertEqual(meldungen("local/stack.yml", f"    image: ghcr.io/x/y:1.0@{DIGEST}"), [])
+        self.assertEqual(meldungen("chat-stack/stack.yml", f"    image: ghcr.io/x/y:1.0@{DIGEST}"), [])
 
     def test_tag_ohne_digest_ist_verstoss(self):
-        self.assertEqual(len(meldungen("local/stack.yml", "    image: ghcr.io/x/y:1.0")), 1)
+        self.assertEqual(len(meldungen("chat-stack/stack.yml", "    image: ghcr.io/x/y:1.0")), 1)
 
     def test_latest_ist_verstoss(self):
-        self.assertEqual(len(meldungen("local/stack.yml", "image: 'nginx:latest'")), 1)
+        self.assertEqual(len(meldungen("chat-stack/stack.yml", "image: 'nginx:latest'")), 1)
 
     def test_variable_wird_uebersprungen(self):
-        self.assertEqual(meldungen("local/stack.yml", "    image: ${LITELLM_IMAGE}"), [])
+        self.assertEqual(meldungen("chat-stack/stack.yml", "    image: ${LITELLM_IMAGE}"), [])
 
     def test_kommentar_wird_uebersprungen(self):
-        self.assertEqual(meldungen("local/stack.yml", "    # image: nginx:latest"), [])
+        self.assertEqual(meldungen("chat-stack/stack.yml", "    # image: nginx:latest"), [])
 
     def test_ignore_marker(self):
-        self.assertEqual(meldungen("local/stack.yml", "image: nginx:latest  # pin-check: ignore"), [])
+        self.assertEqual(meldungen("chat-stack/stack.yml", "image: nginx:latest  # pin-check: ignore"), [])
 
 
 # ---------------------------------------------------------------------------
@@ -61,7 +61,7 @@ class ImagesInYaml(unittest.TestCase):
 #
 # Jede Variable, deren Name auf IMAGE endet (IMAGE=, VLLM_IMAGE=, auch mit
 # "export"), braucht einen Digest. Ein leerer Wert ist erlaubt – so sieht
-# z. B. local/images.env aus, bevor der Digest eingetragen ist.
+# z. B. chat-stack/images.env aus, bevor der Digest eingetragen ist.
 # ---------------------------------------------------------------------------
 class ImagesInVariablen(unittest.TestCase):
     def test_image_variable_mit_digest(self):
@@ -118,7 +118,7 @@ class ModellProfile(unittest.TestCase):
         self.assertEqual(len(meldungen("profiles/ds4/model.env", text)), 1)
 
     def test_ausserhalb_von_profiles_nicht_geprueft(self):
-        self.assertEqual(meldungen("local/test.env", "MODEL_ID=x/y"), [])
+        self.assertEqual(meldungen("chat-stack/test.env", "MODEL_ID=x/y"), [])
 
 
 if __name__ == "__main__":

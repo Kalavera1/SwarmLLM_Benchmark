@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Deployt den Swarm-Stack "llm" auf dem Mediaserver.
+# Deployt den Swarm-Stack "llm" auf einem Linux-Rechner mit Docker (optionaler Chat-Zugang).
 #
 # Was das Skript prüft und erledigt:
 #   1. Swarm ist aktiv (sonst Hinweis auf `docker swarm init`)
 #   2. LITELLM_IMAGE in images.env ist per Digest gepinnt (Regel 4)
 #   3. Secrets existieren; fehlende werden angelegt:
-#        litellm_master_key  aus LITELLM_MASTER_KEY in ../.env
+#        litellm_master_key  aus LITELLM_MASTER_KEY in ../benchmark.conf (ältere Stände: ../.env)
 #        mock_api_key        zufällig (niemand muss ihn kennen)
 #   4. Config-Namen enthalten einen Hash des Inhalts, damit Änderungen an
 #      config.yaml, start.sh oder mock_openai.py beim Deploy ankommen
@@ -29,14 +29,14 @@ fehler() {
 # 1. Swarm aktiv? Ohne Swarm-Modus gibt es kein "docker stack deploy".
 # ---------------------------------------------------------------------------
 [[ "$(docker info --format '{{.Swarm.LocalNodeState}}')" == "active" ]] \
-  || fehler "Swarm ist nicht aktiv. Einmalig ausführen: docker swarm init --advertise-addr <LAN-IP des Mediaservers>"
+  || fehler "Swarm ist nicht aktiv. Einmalig ausführen: docker swarm init --advertise-addr <LAN-IP dieses Rechners>"
 
 # ---------------------------------------------------------------------------
 # 2. Gepinntes Image (Regel 4): images.env laden; "set -a" exportiert alle
 #    Variablen daraus, damit docker stack deploy sie in stack.yml einsetzt.
 # ---------------------------------------------------------------------------
 set -a
-# shellcheck source=local/images.env
+# shellcheck source=chat-stack/images.env
 source ./images.env
 set +a
 [[ "${LITELLM_IMAGE:-}" =~ @sha256:[0-9a-f]{64}$ ]] \
@@ -48,19 +48,23 @@ set +a
 # ---------------------------------------------------------------------------
 secret_fehlt() { ! docker secret inspect "$1" >/dev/null 2>&1; }
 
+# Eigene Werte stehen in ../benchmark.conf; ältere Stände nutzten ../.env
+KONF=../benchmark.conf
+[[ -f "$KONF" ]] || KONF=../.env
+
 if secret_fehlt litellm_master_key; then
-  [[ -f ../.env ]] || fehler "../.env fehlt. Vorlage: cp ../.env.example ../.env, dann LITELLM_MASTER_KEY setzen."
+  [[ -f "$KONF" ]] || fehler "../benchmark.conf fehlt. Vorlage: cp ../benchmark.conf.example ../benchmark.conf, dann LITELLM_MASTER_KEY setzen."
   # Steht die Zeile mehrfach drin (z. B. leere Vorlage + Wert angehängt), gilt
   # die letzte. Anführungszeichen, Leerzeichen und Windows-Zeilenenden (\r)
   # werden entfernt, damit sie nicht ins Secret wandern.
-  anzahl=$(grep -cE '^LITELLM_MASTER_KEY=' ../.env || true)
+  anzahl=$(grep -cE '^LITELLM_MASTER_KEY=' "$KONF" || true)
   [[ "$anzahl" -le 1 ]] \
-    || echo "WARNUNG: LITELLM_MASTER_KEY steht ${anzahl}-mal in ../.env – verwendet wird die letzte Zeile."
-  MASTER_KEY=$(grep -E '^LITELLM_MASTER_KEY=' ../.env | tail -n1 | cut -d= -f2- | tr -d "\r\"' \t" || true)
+    || echo "WARNUNG: LITELLM_MASTER_KEY steht ${anzahl}-mal in $KONF – verwendet wird die letzte Zeile."
+  MASTER_KEY=$(grep -E '^LITELLM_MASTER_KEY=' "$KONF" | tail -n1 | cut -d= -f2- | tr -d "\r\"' \t" || true)
   [[ ${#MASTER_KEY} -ge 24 ]] \
-    || fehler "LITELLM_MASTER_KEY in ../.env fehlt oder ist kürzer als 24 Zeichen. Erzeugen mit: echo \"sk-\$(openssl rand -hex 24)\""
+    || fehler "LITELLM_MASTER_KEY in $KONF fehlt oder ist kürzer als 24 Zeichen. Erzeugen mit: echo \"sk-\$(openssl rand -hex 24)\""
   printf '%s' "$MASTER_KEY" | docker secret create litellm_master_key - >/dev/null
-  echo "Secret litellm_master_key angelegt (aus ../.env)."
+  echo "Secret litellm_master_key angelegt (aus $KONF)."
 fi
 
 if secret_fehlt mock_api_key; then

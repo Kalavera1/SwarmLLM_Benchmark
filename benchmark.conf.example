@@ -44,10 +44,9 @@ RUNPOD_GPU_ID=
 RUNPOD_CLOUD=COMMUNITY
 
 # ---------------------------------------------------------------------------
-# 5. Geld und Sicherheit
+# 5. Sicherheit: Watchdog
+#    Die Ausgabengrenze setzt ihr im RunPod-Konto (Limit der hinterlegten Karte).
 # ---------------------------------------------------------------------------
-# Obergrenze in $ für alle RunPod-Läufe zusammen (verbucht in results/kosten.csv)
-RUNPOD_BUDGET_USD=100
 # Watchdog: Der Pod wird spätestens nach so vielen Minuten gelöscht.
 # Leer lassen = Standard je Stufe (schnell 90, voll 210).
 POD_MAX_MINUTES=

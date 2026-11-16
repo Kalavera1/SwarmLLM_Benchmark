@@ -4,6 +4,31 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-16 – Keine Budgetgrenze im Skript; Ausgabenlimit im RunPod-Konto
+
+**Entscheidung:** `runpod/rp.py` bricht nicht mehr wegen eines Budgets ab; `RUNPOD_BUDGET_USD` entfällt. Das Skript zeigt vor dem Start weiter die geschätzten Kosten, fragt nach Bestätigung und verbucht jeden Pod in `results/kosten.csv` (`rp.py kosten` zeigt die Summe). Die Ausgabengrenze setzt ihr als Limit der hinterlegten Firmenkarte im RunPod-Konto.
+
+**Warum:** Ein Limit beim Anbieter gilt für alles, was über das Konto läuft – auch für Pods, die per Weboberfläche oder auf einem anderen Rechner gestartet werden. Eine Grenze im Skript würde nur Läufe vom selben Rechner sehen und doppelt pflegen, was das Konto ohnehin kann.
+
+## 2026-11-16 – pin.py holt Image-Digests direkt von der Registry
+
+**Entscheidung:** `profiles/pin.py` fragt Docker Hub bzw. ghcr.io direkt über die Registry-API (anonymes Lese-Token, Header `Docker-Content-Digest`); Docker ist nur noch Ersatzweg. Neu: `--trocken` zeigt an, was eingetragen würde, ohne das Profil zu ändern.
+
+**Warum:** Der Steuerrechner (Laptop) hat nicht unbedingt Docker. Angefragt wird der Multi-Arch-Index, damit derselbe Digest herauskommt wie bei `docker buildx imagetools inspect`.
+
+## 2026-11-16 – Kein fester Mediaserver mehr: beliebiger Steuerrechner, Chat-Stack optional
+
+**Entscheidung:**
+- Gesteuert wird von einem **beliebigen Rechner** mit Python 3.11 (zunächst ein Laptop). Alle eigenen Werte stehen in `benchmark.conf` (Vorlage `benchmark.conf.example`); `.env.example` entfällt, `.env` wird nur noch als Fallback gelesen.
+- Der Docker-Swarm-Stack mit LiteLLM ist **optional** und heißt jetzt `chat-stack/` statt `local/`. Er läuft auf jedem Linux-Rechner mit Docker.
+- Messungen gehen **direkt an vLLM**, nicht über LiteLLM.
+
+**Warum:**
+- Es gibt keinen Rechner mehr, der dauerhaft als Mediaserver bereitsteht. Die Testsuite braucht keine GPU und keinen Docker-Stack – nur Python und Netz zum GPU-Server.
+- Ziel des Projekts sind die Modelle und ihr Tempo. Der Chat-Stack hilft beim Ausprobieren und ist die Vorlage für den späteren Betrieb, beeinflusst aber keine Messung. Ein Gateway dazwischen könnte die Zahlen durch Caching sogar verfälschen.
+
+**Folgen:** Der RunPod-Watchdog läuft auf dem Steuerrechner – während eines Laufs darf ein Laptop nicht in den Ruhezustand. Bei Cloud-VMs übernimmt die maximale Laufzeit mit automatischem Löschen diese Rolle.
+
 ## 2026-11-16 – Zielhardware bestätigt: EPYC 9745 und 2× RTX PRO 6000 Max-Q
 
 **Befund (Angabe des Nutzers):** Zielserver (Lenovo ThinkSystem) mit
