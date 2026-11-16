@@ -109,5 +109,6 @@ Ordner entstehen erst in der Phase, in der sie gebraucht werden.
 ├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen (Anleitung: runpod/README.md)
 ├── server/             Startskript im Container, docker run für eigenen Server
 ├── profiles/           Phase 4+: ein Ordner pro Modell
-└── results/            Messergebnisse (JSON + Zusammenfassung)
+├── results/            Messergebnisse (JSON + Zusammenfassung), Messreihe v1
+└── archiv/             frühere Testläufe, unverändert, mit Steckbrief (Messreihe v0)
 ```
