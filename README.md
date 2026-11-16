@@ -93,5 +93,6 @@ Ordner entstehen erst in der Phase, in der sie gebraucht werden.
 ├── bench/              Phase 2: Testsuite (V-Modell), blockweise startbar
 ├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen
 ├── profiles/           Phase 4+: ein Ordner pro Modell
-└── results/            Messergebnisse (JSON + Zusammenfassung)
+├── results/            Messergebnisse (JSON + Zusammenfassung), Messreihe v1
+└── archiv/             frühere Testläufe, unverändert, mit Steckbrief (Messreihe v0)
 ```

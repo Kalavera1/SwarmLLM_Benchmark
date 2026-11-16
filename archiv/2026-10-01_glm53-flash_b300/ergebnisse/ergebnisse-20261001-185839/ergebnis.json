@@ -1,0 +1,82 @@
+{
+  "zeit": "2026-10-01 18:58",
+  "abap": [
+    {
+      "aufgabe": "alv-report",
+      "ttft_s": 125.15,
+      "dauer_s": 125.15,
+      "prompt_tokens": null,
+      "completion_tokens": 0,
+      "tok_s": 0.0,
+      "denk_zeichen": 0,
+      "antwort_zeichen": 0,
+      "abgeschnitten": false
+    },
+    {
+      "aufgabe": "open-sql",
+      "ttft_s": 0.28,
+      "dauer_s": 100.94,
+      "prompt_tokens": 108,
+      "completion_tokens": 10937,
+      "tok_s": 108.7,
+      "denk_zeichen": 35729,
+      "antwort_zeichen": 3253,
+      "abgeschnitten": false
+    },
+    {
+      "aufgabe": "cds-view",
+      "ttft_s": 0.28,
+      "dauer_s": 140.21,
+      "prompt_tokens": 90,
+      "completion_tokens": 15267,
+      "tok_s": 109.1,
+      "denk_zeichen": 53869,
+      "antwort_zeichen": 5437,
+      "abgeschnitten": false
+    },
+    {
+      "aufgabe": "rap",
+      "ttft_s": 0.28,
+      "dauer_s": 169.88,
+      "prompt_tokens": 99,
+      "completion_tokens": 18505,
+      "tok_s": 109.1,
+      "denk_zeichen": 69968,
+      "antwort_zeichen": 6513,
+      "abgeschnitten": false
+    },
+    {
+      "aufgabe": "fehlersuche",
+      "ttft_s": 101.07,
+      "dauer_s": 198.75,
+      "prompt_tokens": 206,
+      "completion_tokens": 11401,
+      "tok_s": 116.7,
+      "denk_zeichen": 37458,
+      "antwort_zeichen": 3957,
+      "abgeschnitten": false
+    },
+    {
+      "aufgabe": "modernisieren",
+      "ttft_s": 125.15,
+      "dauer_s": 125.15,
+      "prompt_tokens": null,
+      "completion_tokens": 0,
+      "tok_s": 0.0,
+      "denk_zeichen": 0,
+      "antwort_zeichen": 0,
+      "abgeschnitten": false
+    },
+    {
+      "aufgabe": "amdp",
+      "ttft_s": 0.28,
+      "dauer_s": 263.96,
+      "prompt_tokens": 110,
+      "completion_tokens": 32000,
+      "tok_s": 121.4,
+      "denk_zeichen": 127831,
+      "antwort_zeichen": 0,
+      "abgeschnitten": true
+    }
+  ]
+}

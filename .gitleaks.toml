@@ -16,7 +16,8 @@ useDefault = true
 #
 #   regex        Gruppe 1 = Variablenname, Gruppe 2 = Wert. Der Wert muss
 #                mindestens 12 Zeichen haben und darf kein Leerzeichen,
-#                Anführungszeichen, # (Kommentar) oder $ (Verweis) enthalten.
+#                Anführungszeichen, # (Kommentar), $ (Verweis) oder < (Platzhalter
+#                wie <inhalt-von-api-key.txt>, z. B. im Archiv) enthalten.
 #                [ \t]* statt \s*, damit die Regex nicht in die nächste Zeile
 #                weiterliest.
 #   secretGroup  welche Gruppe das eigentliche Secret ist (wird geschwärzt)
@@ -25,6 +26,6 @@ useDefault = true
 [[rules]]
 id = "projekt-zugangsdaten"
 description = "Wert für eine Zugangsdaten-Variable dieses Projekts"
-regex = '''(?i)\b(RUNPOD_API_KEY|VLLM_API_KEY|LITELLM_MASTER_KEY|HF_TOKEN)[ \t]*[:=][ \t]*["']?([^\s"'#$]{12,})'''
+regex = '''(?i)\b(RUNPOD_API_KEY|VLLM_API_KEY|LITELLM_MASTER_KEY|HF_TOKEN)[ \t]*[:=][ \t]*["']?([^\s"'#$<]{12,})'''
 secretGroup = 2
 keywords = ["runpod_api_key", "vllm_api_key", "litellm_master_key", "hf_token"]

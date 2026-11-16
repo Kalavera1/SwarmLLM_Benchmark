@@ -1,0 +1,232 @@
+<title>GLM-5.3-Flash auf der B300</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F4F6F8; --surface:#FFFFFF; --ink:#151A21; --muted:#5A6573; --line:#D9DEE5;
+  --accent:#2F5BD3; --accent-soft:#E3EAFB; --accent-2:#9DB2EC; --good:#1E7F4F; --good-soft:#E2F2E9;
+  --warn:#A2620F; --warn-soft:#FBEFD9; --bad:#B4322B; --bad-soft:#FBE4E2;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10141A; --surface:#171C24; --ink:#E6EAF0; --muted:#97A2B1; --line:#2A313C;
+    --accent:#7C9CF0; --accent-soft:#1F2A47; --accent-2:#3A4E86; --good:#5CC48E; --good-soft:#15301F;
+    --warn:#E3A84E; --warn-soft:#33260F; --bad:#EE7B73; --bad-soft:#3A1816;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10141A; --surface:#171C24; --ink:#E6EAF0; --muted:#97A2B1; --line:#2A313C;
+  --accent:#7C9CF0; --accent-soft:#1F2A47; --accent-2:#3A4E86; --good:#5CC48E; --good-soft:#15301F;
+  --warn:#E3A84E; --warn-soft:#33260F; --bad:#EE7B73; --bad-soft:#3A1816;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);padding-inline:16px;padding-block:32px 64px}
+main{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0;max-width:68ch}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header,section{display:flex;flex-direction:column;gap:14px}
+.lede{font-size:18px}
+.meta{font:13px/1.5 var(--mono);color:var(--muted)}
+.verdict{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:20px}
+.kpi{display:flex;flex-direction:column;gap:4px}
+.kpi b{font:700 28px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.kpi span{font-size:14px;color:var(--muted)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hl td{background:var(--accent-soft)}
+tr.q td{background:var(--warn-soft)}
+.pill{display:inline-block;font:500 12px var(--mono);padding:2px 8px;border-radius:99px;white-space:nowrap}
+.ok{background:var(--good-soft);color:var(--good)}
+.warn{background:var(--warn-soft);color:var(--warn)}
+.bad{background:var(--bad-soft);color:var(--bad)}
+.note{font-size:14px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.box.alert{border-color:var(--warn)}
+ul,ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-width:70ch}
+code{font:13px var(--mono);background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto}
+svg text{fill:var(--muted);font:11px var(--mono)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+</style>
+
+<main>
+<header>
+  <span class="eyebrow">Testbericht · RunPod · 01.10.2026</span>
+  <h1>GLM-5.3-Flash auf der B300</h1>
+  <p class="lede">GLM-5.3-Flash läuft in NVFP4 auf <strong>einer</strong> B300 mit dem vollen Kontext von 1 Million Token. Ein einzelner Nutzer bekommt 143 Token/s, unter Volllast liefert die Karte rund 425 Token/s. Fachlich ist das Modell bei ABAP stark. Ohne passende Einstellung der Denktiefe ist es dabei aber sehr langsam, und mit der aktuellen Konfiguration bricht der RunPod-Proxy Anfragen ab, die zu lange in der Warteschlange stehen.</p>
+  <p class="meta">1× B300 (288 GB) · vLLM 0.30.1rc1 nightly · nvidia/GLM-5.3-Flash-NVFP4 · max-model-len 1.048.576 · max-num-seqs 4 · 7,96 $/h</p>
+</header>
+
+<section>
+  <h2>Auf einen Blick</h2>
+  <div class="verdict">
+    <div class="kpi"><b>143 tok/s</b><span>ein Nutzer, erstes Wort nach 0,3–0,5 s</span></div>
+    <div class="kpi"><b>~425 tok/s</b><span>Gesamtdurchsatz unter Volllast</span></div>
+    <div class="kpi"><b>950k</b><span>Token Kontext, versteckte Zahl gefunden (37 s Einlesen)</span></div>
+    <div class="kpi"><b>10/10</b><span>Tool-Calls korrekt</span></div>
+    <div class="kpi"><b>5 von 7</b><span>ABAP-Aufgaben gut bis sehr gut</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Was getestet wurde</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Test</th><th>Was genau</th></tr></thead>
+    <tbody>
+      <tr><td>Laststufen</td><td>1, 2, 4, 8, 16 Nutzer gleichzeitig, jeder mit eigener Frage, 800 Token Antwort</td></tr>
+      <tr><td>Langer Kontext</td><td>Versteckte Zahl in 31k bis 950k Token Text finden</td></tr>
+      <tr><td>Kontext unter Last</td><td>4 Nutzer mit je 120k gleichzeitig · ein 500k-Auftrag neben drei normalen Chats · zweite Frage zum selben 500k-Dokument</td></tr>
+      <tr><td>ABAP</td><td>7 Aufgaben: ALV-Report, ABAP-SQL, CDS View Entity, RAP mit Draft, Fehlersuche, Modernisierung, AMDP</td></tr>
+      <tr><td>Denktiefe</td><td>Rechenaufgabe mit <code>reasoning_effort</code> low / high / max, dazu AMDP mit high</td></tr>
+      <tr><td>Tool-Calls</td><td>10 Anfragen mit zwei Werkzeugen (Wetter, Shell)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Verhalten unter Last</h2>
+  <div class="tbl"><table>
+    <thead><tr><th class="n">Nutzer</th><th class="n">Erstes Wort (Median)</th><th class="n">Erstes Wort (langsamste 5 %)</th><th class="n">Tempo je Nutzer</th><th class="n">Gesamt</th><th class="n">Längste Antwortzeit</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td class="n">0,48 s</td><td class="n">0,48 s</td><td class="n">143 tok/s</td><td class="n">132 tok/s</td><td class="n">6,1 s</td></tr>
+      <tr><td class="n">2</td><td class="n">0,52 s</td><td class="n">0,52 s</td><td class="n">129 tok/s</td><td class="n">238 tok/s</td><td class="n">6,7 s</td></tr>
+      <tr class="hl"><td class="n">4</td><td class="n">0,41 s</td><td class="n">0,41 s</td><td class="n">111 tok/s</td><td class="n">419 tok/s</td><td class="n">7,7 s</td></tr>
+      <tr class="q"><td class="n">8</td><td class="n">4,1 s</td><td class="n">7,9 s</td><td class="n">111 tok/s</td><td class="n">424 tok/s</td><td class="n">15,1 s</td></tr>
+      <tr class="q"><td class="n">16</td><td class="n">11,6 s</td><td class="n">22,7 s</td><td class="n">110 tok/s</td><td class="n">427 tok/s</td><td class="n">29,9 s</td></tr>
+    </tbody>
+  </table></div>
+  <div class="chart">
+    <svg viewBox="0 0 560 230" width="100%" style="min-width:440px" role="img" aria-label="Gesamtdurchsatz steigt bis 4 Nutzer auf 419 tok/s und bleibt dann bei rund 425; die Wartezeit bis zum ersten Wort steigt ab 8 Nutzern auf 4 bzw. 11,6 Sekunden">
+      <g stroke="var(--line)"><line x1="50" y1="180" x2="510" y2="180"/><line x1="50" y1="130" x2="510" y2="130"/><line x1="50" y1="80" x2="510" y2="80"/><line x1="50" y1="30" x2="510" y2="30"/></g>
+      <text x="44" y="184" text-anchor="end">0</text><text x="44" y="134" text-anchor="end">150</text><text x="44" y="84" text-anchor="end">300</text><text x="44" y="34" text-anchor="end">450</text>
+      <text x="516" y="184">0 s</text><text x="516" y="130">6 s</text><text x="516" y="80">12 s</text>
+      <g fill="var(--accent)">
+        <rect x="70" y="136" width="44" height="44"/><rect x="160" y="100.7" width="44" height="79.3"/><rect x="250" y="40.3" width="44" height="139.7"/><rect x="340" y="38.7" width="44" height="141.3"/><rect x="430" y="37.7" width="44" height="142.3"/>
+      </g>
+      <polyline fill="none" stroke="var(--warn)" stroke-width="2.5" points="92,176 182,175.7 272,176.6 362,145.7 452,83.7"/>
+      <g fill="var(--warn)"><circle cx="92" cy="176" r="3.5"/><circle cx="182" cy="175.7" r="3.5"/><circle cx="272" cy="176.6" r="3.5"/><circle cx="362" cy="145.7" r="3.5"/><circle cx="452" cy="83.7" r="3.5"/></g>
+      <text x="92" y="198" text-anchor="middle">1</text><text x="182" y="198" text-anchor="middle">2</text><text x="272" y="198" text-anchor="middle">4</text><text x="362" y="198" text-anchor="middle">8</text><text x="452" y="198" text-anchor="middle">16</text>
+      <text x="272" y="220" text-anchor="middle">gleichzeitige Nutzer</text>
+    </svg>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Gesamtdurchsatz tok/s (linke Achse)</span><span><i style="background:var(--warn)"></i>Erstes Wort, Median (rechte Achse)</span></div>
+  </div>
+  <p class="note">Bis 4 Nutzer verteilt die Karte die Last fast perfekt: Der Durchsatz verdreifacht sich, jeder Nutzer behält über 110 tok/s. Ab 8 Nutzern ist die Grenze erreicht, die der Server selbst setzt (<code>--max-num-seqs 4</code>). Weitere Anfragen warten in der Schlange: Der Durchsatz bleibt bei rund 425 tok/s, die Wartezeit wächst. Wer drankommt, bekommt aber weiter volles Tempo. Wie viel mehr eine höhere Grenze bringt, ist nicht gemessen. Der Speicher reicht dafür.</p>
+</section>
+
+<section>
+  <h2>Langer Kontext</h2>
+  <div class="tbl"><table>
+    <thead><tr><th class="n">Token im Prompt</th><th class="n">Einlesen</th><th class="n">Tempo Einlesen</th><th>Zahl gefunden</th></tr></thead>
+    <tbody>
+      <tr><td class="n">31.156</td><td class="n">1,7 s</td><td class="n">18.769 tok/s</td><td><span class="pill ok">ja</span></td></tr>
+      <tr><td class="n">124.563</td><td class="n">4,6 s</td><td class="n">27.257 tok/s</td><td><span class="pill ok">ja</span></td></tr>
+      <tr><td class="n">249.076</td><td class="n">9,0 s</td><td class="n">27.799 tok/s</td><td><span class="pill ok">ja</span></td></tr>
+      <tr><td class="n">498.100</td><td class="n">17,6 s</td><td class="n">28.317 tok/s</td><td><span class="pill ok">ja</span></td></tr>
+      <tr class="hl"><td class="n">950.020</td><td class="n">37,5 s</td><td class="n">25.368 tok/s</td><td><span class="pill ok">ja</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3>Kontext unter Last</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Situation</th><th>Ergebnis</th></tr></thead>
+    <tbody>
+      <tr><td>4 Nutzer mit je 120k Token gleichzeitig</td><td>Alle nach 11,7 s fertig, erstes Wort nach 4,8–10,5 s, Zahl <strong>4/4</strong> gefunden</td></tr>
+      <tr><td>3 normale Chats ohne Störung</td><td>Erstes Wort 0,46 s, 108 tok/s</td></tr>
+      <tr class="q"><td>Dieselben 3 Chats, während ein 500k-Auftrag eingelesen wird</td><td>Erstes Wort weiter 0,4 s, aber nur noch <strong>31 tok/s</strong>, solange das Einlesen läuft. Der 500k-Auftrag selbst: erstes Wort nach 13 s, Zahl gefunden</td></tr>
+      <tr><td>Zweite Frage zum selben 500k-Dokument</td><td>Erstes Wort nach <strong>6,2 s</strong> statt 13 s. Der Cache für gleiche Textanfänge greift</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Vorbehalt: Der Fülltext ist in allen Kontexttests derselbe. Deshalb hat der Cache auch beim ersten 500k-Auftrag schon geholfen (13 s statt 17,6 s im Einzeltest). Mit echten, verschiedenen Dokumenten dauert das Einlesen eher so lange wie in der oberen Tabelle. Beim Speicher gibt es kein Problem: vLLM meldete Platz für 9,35 Millionen Token.</p>
+</section>
+
+<section>
+  <h2>ABAP</h2>
+  <p>Die Bewertung stammt von mir und beruht auf dem Lesen des Codes. Kompiliert habe ich nichts, dafür fehlt ein SAP-System. Alle Antworten liegen vollständig unter <code>~/scripts/runpod-glm/ergebnisse-20261001-185839/</code>, jeweils mit dem kompletten Denkprozess.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Aufgabe</th><th>Urteil</th><th>Stark</th><th>Schwach</th><th class="n">Token / Zeit</th></tr></thead>
+    <tbody>
+      <tr><td>ALV-Report (SALV)</td><td><span class="pill ok">sehr gut</span></td><td>JOIN statt SELECT in Schleife, Summenzeile, Währungs- und Mengenreferenz, Prüfung gegen TVKO, saubere Fehlerbehandlung</td><td>kaum etwas</td><td class="n">22.964 / 182 s</td></tr>
+      <tr><td>Modernisierung</td><td><span class="pill ok">sehr gut</span></td><td>VALUE + FOR, String-Template, <code>ASSIGN lt[ 1 ]</code> ohne Ausnahme, NEW. Erklärt, warum das Verhalten gleich bleibt</td><td>nichts gefunden</td><td class="n">21.845 / 174 s</td></tr>
+      <tr><td>ABAP-SQL mit Aggregation</td><td><span class="pill ok">gut</span></td><td>JOIN, GROUP BY, HAVING, @-Host-Variablen, BETWEEN statt SUBSTRING mit Begründung, Hinweis auf gemischte Währungen</td><td>Fügt einen nicht verlangten Filter <code>auart = 'TA'</code> aktiv in den Code ein</td><td class="n">10.937 / 101 s</td></tr>
+      <tr><td>CDS View Entity</td><td><span class="pill ok">gut</span></td><td>Assoziation mit <code>$projection</code>, Semantics für Betrag und Menge, <code>division()</code> mit Schutz vor Division durch 0, Hinweis auf released API</td><td>Berechneter Betrag als <code>abap.dec</code> statt <code>abap.curr</code></td><td class="n">15.267 / 140 s</td></tr>
+      <tr><td>Fehlersuche</td><td><span class="pill warn">gut, unvollständig</span></td><td>Findet den Syntaxfehler (fehlendes <code>@sy-datum</code> im Strict Mode), N+1-SELECT, unnötiges <code>COMMIT WORK</code>, lineare Suche</td><td>Die verlangte <strong>korrigierte Fassung fehlt</strong></td><td class="n">11.401 / 199 s</td></tr>
+      <tr><td>RAP mit Draft</td><td><span class="pill warn">brauchbare Skizze</span></td><td>Vollständige Struktur, Validation, Determination, Action, EML im LOCAL MODE korrekt</td><td>Unter <code>strict ( 2 )</code> fehlen die Pflicht-Draft-Actions (Edit, Activate, Discard, Resume, Prepare). <code>numbering:managed</code> steht an der falschen Stelle. Kommentare mit <code>"</code> statt <code>//</code> in DDL/BDEF</td><td class="n">18.505 / 170 s</td></tr>
+      <tr><td>AMDP (mit Denktiefe high)</td><td><span class="pill bad">mangelhaft</span></td><td>Korrekter Aufbau: IF_AMDP_MARKER_HDB, DDIC-Tabellentyp, LIMIT in SQLScript</td><td><code>"</code>-Kommentar im SQLScript (dort ein Fehler). Kein Mandantenfilter. Die verlangte Erklärung „wann AMDP“ fehlt</td><td class="n">1.848 / 18 s</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">AMDP lief zuerst mit der voreingestellten Denktiefe. Dort hat das Modell im Denkprozess genau den <code>"</code>-Kommentar-Fehler selbst entdeckt, sich dann aber über 32.000 Token festgedacht und keine Antwort geliefert. Mit <code>high</code> kam die Antwort schnell, dafür mit genau diesem Fehler. Das passt zum Muster im nächsten Abschnitt.</p>
+</section>
+
+<section>
+  <h2>Denktiefe</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Aufgabe</th><th>Einstellung</th><th class="n">Token</th><th class="n">Zeit</th><th>Ergebnis</th></tr></thead>
+    <tbody>
+      <tr><td>Rechenaufgabe (Kaffeemischung)</td><td><code>low</code></td><td class="n">338</td><td class="n">2,8 s</td><td><span class="pill ok">richtig</span></td></tr>
+      <tr><td>Rechenaufgabe</td><td><code>high</code></td><td class="n">495</td><td class="n">3,7 s</td><td><span class="pill ok">richtig</span></td></tr>
+      <tr><td>Rechenaufgabe</td><td><code>max</code></td><td class="n">866</td><td class="n">6,5 s</td><td><span class="pill ok">richtig</span></td></tr>
+      <tr class="q"><td>ABAP-Aufgaben</td><td>Voreinstellung</td><td class="n">11–23k</td><td class="n">1,5–4 min</td><td>gründlich, aber langsam</td></tr>
+      <tr><td>AMDP</td><td><code>high</code></td><td class="n">1.848</td><td class="n">18 s</td><td>schnell, aber mit Fehlern</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Die Voreinstellung ohne <code>reasoning_effort</code> denkt bei Code sehr gründlich: 80.000 Zeichen Denkprozess für einen ALV-Report sind normal. Das Ergebnis ist meist sehr gut, kostet aber 2–4 Minuten pro Antwort. Bei 8.000 Token Limit kam in keiner der 7 Aufgaben eine Antwort heraus, weil das ganze Budget für das Denken draufging. Für den Alltag in OpenWebUI empfehle ich <code>high</code> und ein großzügiges Token-Limit. Für schwierige Aufgaben kann man es bewusst hochdrehen.</p>
+</section>
+
+<section>
+  <h2>Was für den Betrieb wichtig ist</h2>
+  <div class="cols">
+    <div class="box alert"><h3>Proxy bricht Wartende ab</h3><p>Von 7 gleichzeitigen ABAP-Anfragen kamen 2 nach genau 125 s leer zurück. Sie standen hinter der Grenze von 4 in der Warteschlange, und der RunPod-HTTP-Proxy trennt Verbindungen, über die rund 2 Minuten lang nichts fließt. In OpenWebUI hieße das: Bei Andrang bricht bei manchen Leuten die Antwort ab. <strong>Abhilfe:</strong> <code>--max-num-seqs 16</code> beim nächsten Start.</p></div>
+    <div class="box"><h3>Großer Kontext bremst andere</h3><p>Liest jemand 500k Token ein, sinkt das Tempo der anderen Chats für diese Zeit auf rund ein Drittel. Das erste Wort kommt trotzdem sofort.</p></div>
+    <div class="box"><h3>Einmalige Ruckler</h3><p>Die ersten Anfragen nach dem Start lösen gelegentlich eine Kernel-Kompilierung aus. Einmal fiel das Tempo so auf 48 tok/s, in der Wiederholung waren es wieder 142.</p></div>
+    <div class="box"><h3>Anlaufzeit</h3><p>Rund 15 Minuten bis zur ersten Antwort: 191 GB Gewichte, 145 s JIT-Kompilierung, Autotuning. Mit einem Network Volume fällt der Download weg.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Was es kostet</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Auslastung</th><th class="n">Token/s</th><th class="n">$ je 1 Mio. Antwort-Token</th></tr></thead>
+    <tbody>
+      <tr><td>Ein Nutzer, Dauerbetrieb</td><td class="n">143</td><td class="n">15,5</td></tr>
+      <tr><td>Vier Nutzer, Dauerbetrieb</td><td class="n">419</td><td class="n">5,3</td></tr>
+      <tr><td>Leerlauf</td><td class="n">0</td><td class="n">7,96 $ pro Stunde trotzdem</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Abgerechnet wird pro Stunde (7,96 $), nicht pro Token. Bei den ABAP-Aufgaben mit 11–23k Token Denkprozess kostet eine einzelne Antwort bei einem Nutzer rund 0,20–0,45 $. Aktuelle API-Preise für GLM habe ich nicht nachgesehen. Für gelegentliche Nutzung ist eine Abrechnung pro Token fast immer günstiger.</p>
+</section>
+
+<section>
+  <h2>OpenWebUI</h2>
+  <ul>
+    <li>Verbindung eingetragen: <code>https://&lt;POD-ID&gt;-8000.proxy.runpod.net/v1</code>, Modell <code>glm-5.3-flash</code>. Die Sicherung liegt unter <code>openwebui/webui.db.bak-20261001-184209</code>.</li>
+    <li>Sichtbar nur für den Admin. Laut OpenWebUI-Code sehen Modelle ohne eigenen Eintrag nur Admins.</li>
+    <li>Zum Ausprobieren unter Workspace → Modelle für GLM einstellen: <strong>Function Calling = Native</strong> und unter den erweiterten Parametern <code>reasoning_effort = high</code>.</li>
+    <li>Nach dem Terminieren des Pods: <code>~/scripts/runpod-glm/openwebui-verbinden.sh --aus</code>. Sonst wartet die Modellliste auf eine tote Adresse.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Empfehlungen für den nächsten Lauf</h2>
+  <ol>
+    <li><strong>Startbefehl anpassen:</strong> <code>--max-num-seqs 16</code> gegen die Abbrüche in der Warteschlange.</li>
+    <li><strong>Network Volume</strong> für die Gewichte (<code>HF_HOME=/workspace/hf</code>). Spart beim Start den Download von 191 GB.</li>
+    <li><strong>Denktiefe <code>high</code></strong> als Standard in OpenWebUI. Für schwere ABAP-Aufgaben bewusst die Voreinstellung nehmen und 3 Minuten Wartezeit einplanen.</li>
+    <li><strong>ABAP-Code vor dem Einsatz prüfen lassen</strong>, am besten über den Syntax-Check in ADT. Struktur und Konzepte sind stark, an Details wie Draft-Actions und SQLScript-Kommentaren hapert es.</li>
+  </ol>
+  <p class="note">Skripte und Rohdaten: <code>~/scripts/runpod-glm/</code> mit <code>LIESMICH.md</code>, <code>bench.py</code>, <code>bench2.py</code>, <code>bench-20261001-184550.json</code>, <code>ergebnisse-20261001-185340/</code> (Last, Kontext, Denktiefe) und <code>ergebnisse-20261001-185839/</code> (ABAP).</p>
+</section>
+</main>

@@ -1,0 +1,52 @@
+{
+  "zeit": "2026-10-01 18:43",
+  "modell": "qwen3.5:9b",
+  "tempo": [
+    {
+      "ttft_s": 23.72,
+      "dauer_s": 45.18,
+      "prompt_tokens": 36,
+      "completion_tokens": 1500,
+      "tok_s": 69.9
+    },
+    {
+      "ttft_s": 0.48,
+      "dauer_s": 22.43,
+      "prompt_tokens": 28,
+      "completion_tokens": 1500,
+      "tok_s": 68.3
+    },
+    {
+      "ttft_s": 0.41,
+      "dauer_s": 22.04,
+      "prompt_tokens": 36,
+      "completion_tokens": 1500,
+      "tok_s": 69.4
+    }
+  ],
+  "parallel": [
+    {
+      "n": 2,
+      "gesamt_tok_s": 68.4,
+      "je_nutzer": [
+        70.9,
+        69.3
+      ]
+    },
+    {
+      "n": 4,
+      "gesamt_tok_s": 71.2,
+      "je_nutzer": [
+        73.2,
+        71.4,
+        73.0,
+        73.1
+      ]
+    }
+  ],
+  "tools": {
+    "treffer": 9,
+    "gesamt": 10
+  },
+  "kontext": []
+}

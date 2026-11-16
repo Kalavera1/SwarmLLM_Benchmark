@@ -1,0 +1,27 @@
+{
+  "zeit": "2026-10-01 18:46",
+  "modell": "glm-5.3-flash",
+  "tempo": [
+    {
+      "ttft_s": 0.26,
+      "dauer_s": 10.98,
+      "prompt_tokens": 39,
+      "completion_tokens": 1500,
+      "tok_s": 139.9
+    },
+    {
+      "ttft_s": 0.31,
+      "dauer_s": 10.83,
+      "prompt_tokens": 32,
+      "completion_tokens": 1500,
+      "tok_s": 142.5
+    },
+    {
+      "ttft_s": 0.47,
+      "dauer_s": 11.0,
+      "prompt_tokens": 39,
+      "completion_tokens": 1500,
+      "tok_s": 142.4
+    }
+  ]
+}
