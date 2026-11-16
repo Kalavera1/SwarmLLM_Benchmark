@@ -20,6 +20,25 @@ flowchart LR
 
 **Wichtig:** vLLM musst du nirgends installieren. Jeder Pod startet direkt mit dem fertigen vLLM-Image aus dem Profil – bei Qwen das offizielle `vllm/vllm-openai`, bei GLM das gepatchte vLLM von Local Inference Lab („Karmic Kraken“).
 
+## Die Skripte im Überblick
+
+Zwei Hauptwerkzeuge, beide startest du auf dem **[Laptop]**:
+
+| Skript | Aufgabe | Wann |
+|---|---|---|
+| `runpod/rp.py` | **GPU-Server steuern:** Pod anlegen, warten, prüfen, löschen, Kosten anzeigen | nur beim RunPod-Weg |
+| `python3 -m bench` (Ordner `bench/`) | **Messen:** die Testsuite mit allen Blöcken, Ergebnissen und Auswertung | bei jedem Weg |
+
+`rp.py` stellt nur den Server bereit – gemessen wird mit `bench`. Dazu drei Hilfsskripte:
+
+| Skript | Aufgabe | Wo es läuft |
+|---|---|---|
+| `profiles/pin.py` | Modell-Revision und Image-Digest ins Profil eintragen | [Laptop], einmal pro Modell |
+| `server/start-im-container.sh` | Host prüfen, Modell laden, vLLM starten | im [Pod], automatisch – du rufst es nie selbst auf |
+| `server/lokal-starten.sh` | dasselbe für Google Cloud, Vast.ai oder den eigenen Server | auf dem GPU-Server |
+
+Ein RunPod-Lauf sieht damit so aus: `pin.py` (einmal) → `rp.py up` → `rp.py warten` → `rp.py check` → `bench run alle` → `rp.py down`.
+
 ---
 
 ## Teil 1 – Einmalig einrichten (kostenlos)
