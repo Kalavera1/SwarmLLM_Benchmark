@@ -78,20 +78,36 @@ Warum so:
 
 ## Modell-Kandidaten
 
-Reihenfolge = Testreihenfolge. Stand: Recherche vom 16.11.2026.
+Getestet wird **nur mit 2 Karten** (2× RTX PRO 6000, 192 GB VRAM). Stand: 17.11.2026.
 
-| # | Modell | Bilder | Runtime | Checkpoint | Status |
-|---|---|---|---|---|---|
-| ★ | **DeepSeek V4.1 Flash** (763B, wichtigstes Modell) | ja | 2 Karten: gepatchtes vLLM mit CPU-Experten (Rezept theogravity), 4 Karten: Karmic Kraken `ds41-flash` | 2 Karten: `diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000` (≈ 322 GiB), 4 Karten: `deepseek-ai/DeepSeek-V4.1-Flash` | Weg offen: eigener Server oder 4× RunPod |
-| 0 | Qwen3.8-27B (Referenz, dense) | ja | vLLM (offizielles Recipe für RTX Pro 6000) | `nvidia/Qwen3.8-27B-NVFP4` | Phase 4: erster GPU-Test |
-| 1 | Qwen3.8-Flash-Next (125B + 51B N-gram, 6B aktiv) | ja | vLLM ≥ 0.30 (Nightly) | `Qwen/Qwen3.8-Flash-Next-FP8`, N-gram-Tabelle im Host-RAM | Phase 5 |
-| 2 | GLM-5.3-Flash (320B, 18B aktiv) | ja | vLLM-Container von Local Inference Lab | `nvidia/GLM-5.3-Flash-FP4-Local` (~166 GiB, von NVIDIA auf 2× RTX PRO 6000 validiert) | Phase 6 |
-| 2b | GLM-5.3-Flash | ja | Runtime von T.J. Purtell (`tpurtell/glm-5.3-flash-ext3-2x-rtx`), Profil `k3` | EXL3 K3 (~127 GiB) | optional |
-| 3 | DeepSeek V4 Flash (284B, 13B aktiv) | **nein** | Karmic Kraken (`ghcr.io/local-inference-lab/vllm`), SM120-Patches | `deepseek-ai/DeepSeek-V4-Flash-0731` | optional, nach den anderen |
+### Rangfolge nach Wichtigkeit
 
-**Passen nicht auf 2× 96 GB** (nur per API sinnvoll): GLM-5.3, Qwen3.5-397B. DeepSeek V4.1 Flash passt nur mit Auslagerung von Experten auf die CPU und der Engram-Tabellen auf die NVMe (siehe Entscheidungslog).
+| Rang | Modell | Bilder | Passt in 2× 96 GB? | Weg | Checkpoint | Phase |
+|---|---|---|---|---|---|---|
+| **1** | **GLM-5.3** (≈ 753B) in **Q3** | prüfen | nein – Experten teils im Arbeitsspeicher | llama.cpp oder KTransformers mit CPU-Experten | Unsloth `UD-Q3_K_XL` (≈ 343 GB) | 8 |
+| **2** | **DeepSeek V4.1 Flash** (763B) | ja | nein – Experten teils auf der CPU, Engram-Tabellen auf der NVMe | gepatchtes vLLM mit CPU-Experten (Rezept theogravity) | `diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000` (≈ 322 GiB) | 7 |
+| 3 | GLM-5.3-Flash (320B, 18B aktiv) | ja | ja | vLLM-Container von Local Inference Lab | `nvidia/GLM-5.3-Flash-FP4-Local` (≈ 166 GiB, von NVIDIA auf 2× RTX PRO 6000 validiert) | 6 |
+| 4 | Qwen3.8-Flash-Next (125B + 51B N-gram, 6B aktiv) | ja | ja, N-gram-Tabelle im Arbeitsspeicher | vLLM ≥ 0.30 (Nightly) | `Qwen/Qwen3.8-Flash-Next-FP8` | 5 |
+| 5 | Qwen3.8-27B (dense) – **Referenz** | ja | ja, sogar auf einer Karte | vLLM (offizielles Recipe) | `nvidia/Qwen3.8-27B-NVFP4` | 4 |
+| – | GLM-5.3-Flash über Purtell-Runtime | ja | ja | `tpurtell/glm-5.3-flash-ext3-2x-rtx`, Profil `k3` | EXL3 K3 (≈ 127 GiB) | optional |
+| – | DeepSeek V4 Flash (284B, 13B aktiv) | **nein** | ja, mit SM120-Patches | Karmic Kraken (`ghcr.io/local-inference-lab/vllm`) | `deepseek-ai/DeepSeek-V4-Flash-0731` | optional |
 
-Warum diese Auswahl und Reihenfolge: siehe [Entscheidungslog](docs/entscheidungen.md).
+**Testreihenfolge ist umgekehrt:** zuerst Rang 5 (Qwen3.8-27B, billig, prüft die ganze Kette), dann 4 und 3, zuletzt die beiden großen Modelle mit CPU-Auslagerung – sie brauchen einen Host mit viel und schnellem Arbeitsspeicher (siehe unten).
+
+### Was die beiden wichtigsten Modelle verlangen
+
+Beide sind größer als 192 GB VRAM. Ein Teil der Experten läuft deshalb auf der CPU, und das Tempo hängt an CPU, Speicherbandbreite und Menge des Arbeitsspeichers – nicht nur an den GPUs.
+
+| | GLM-5.3 Q3 | DeepSeek V4.1 Flash |
+|---|---|---|
+| Gewichte | ≈ 343 GB | ≈ 322 GiB |
+| Arbeitsspeicher im Host | ≥ 256 GB, besser 384 GB (abgeleitet: Gewichte minus VRAM plus Reserve) | ≈ 250 GB laut Rezept |
+| Gemessen auf 2× RTX PRO 6000 (Fremdquelle) | nur die kleinere 2-Bit-Variante: 11–12 tok/s, Einlesen ≈ 83 tok/s (llama.cpp, Xeon, 128 GB RAM) | ≈ 250 tok/s, 505k Kontext, erstes Token nach 41,6 s (Rezept theogravity, Threadripper PRO, 246 GiB RAM) |
+| Risiko für 500k Kontext | **hoch:** bei ≈ 83 tok/s Einlesen dauert ein 500k-Prompt über eine Stunde; KTransformers liest auf der GPU ein und könnte deutlich schneller sein – für GLM-5.3 auf 2 Karten gibt es dazu noch keine Messung | gering, laut Rezept gemessen |
+
+Für den Zielserver (EPYC 9745) heißt das: **alle 12 Speicherkanäle bestücken und mindestens 384 GB RAM** einplanen, damit beide Modelle laufen.
+
+Quellen und Begründung: [Entscheidungslog](docs/entscheidungen.md).
 
 ## Lizenzen beachten
 

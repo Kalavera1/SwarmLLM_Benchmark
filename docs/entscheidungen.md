@@ -4,6 +4,22 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-17 – Nur 2 Karten; GLM-5.3 Q3 ist das wichtigste Modell
+
+**Entscheidung:**
+- Getestet wird **ausschließlich mit 2× RTX PRO 6000**. Der Weg über 4 Karten (Karmic Kraken `ds41-flash` für DeepSeek V4.1 Flash) entfällt.
+- Rangfolge nach Wichtigkeit: **1. GLM-5.3 in Q3**, 2. DeepSeek V4.1 Flash, 3. GLM-5.3-Flash, 4. Qwen3.8-Flash-Next, 5. Qwen3.8-27B als Referenz. Getestet wird in umgekehrter Reihenfolge – erst das billige Referenzmodell, zuletzt die großen.
+
+**Warum:** Der Zielserver hat 2 Karten. Messungen mit 4 Karten sagen über ihn nichts aus.
+
+**Was GLM-5.3 Q3 auf 2 Karten bedeutet:**
+- Q3 (Unsloth `UD-Q3_K_XL`) ist ≈ 343 GB groß und passt nicht in 192 GB VRAM; ein Teil der Experten läuft auf der CPU. Ein Test auf 2× RTX PRO 6000 Max-Q mit 128 GB RAM schloss Q3 deshalb aus und nutzte 2-Bit (`UD-IQ2_M`, 238,6 GB): llama.cpp, 11–12 tok/s Ausgabe, ≈ 83 tok/s Einlesen, 64k Kontext.
+- Daraus folgt für den Zielserver **≥ 384 GB RAM** in 12 Kanälen (abgeleitet: Gewichte minus VRAM plus Reserve, und DeepSeek V4.1 Flash braucht ≈ 250 GB).
+- **500k Kontext ist mit llama.cpp nicht realistisch** (≈ 83 tok/s Einlesen → über eine Stunde für 500k). KTransformers/SGLang rechnet das Einlesen auf der GPU und ist für GLM-5 dokumentiert; für GLM-5.3 auf 2 Karten gibt es noch keine Messung. Die Runtime wird in Phase 8 entschieden.
+- Zum Vergleich: Die EXL3-3-Bit-Fassung (273 GiB) läuft nur auf 4 Karten (ca. 55–60 tok/s) – für uns nicht anwendbar.
+
+**Quellen:** [XDA: GLM 5.3 auf 2× RTX PRO 6000 Max-Q (12.10.2026)](https://www.xda-developers.com/you-can-run-a-744b-model-on-your-own-hardware/), [AlphaSignal: GLM-5.3 EXL3 3.0bpw, 273 GiB, 4 Karten](https://alphasignal.ai/news/infatoshi-squeezes-glm-5-3-s-753b-parameters-into-273-gib-for-multi-gpu), [KTransformers: GLM-5-Tutorial](https://github.com/kvcache-ai/ktransformers/blob/main/doc/en/kt-kernel/GLM-5-Tutorial.md)
+
 ## 2026-11-16 – Keine Budgetgrenze im Skript; Ausgabenlimit im RunPod-Konto
 
 **Entscheidung:** `runpod/rp.py` bricht nicht mehr wegen eines Budgets ab; `RUNPOD_BUDGET_USD` entfällt. Das Skript zeigt vor dem Start weiter die geschätzten Kosten, fragt nach Bestätigung und verbucht jeden Pod in `results/kosten.csv` (`rp.py kosten` zeigt die Summe). Die Ausgabengrenze setzt ihr als Limit der hinterlegten Firmenkarte im RunPod-Konto.
