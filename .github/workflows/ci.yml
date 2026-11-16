@@ -64,7 +64,21 @@ jobs:
         run: python3 ci/check_pins.py
 
   # -------------------------------------------------------------------------
-  # Job 3 – Linter
+  # Job 3 – Testsuite (Phase 2)
+  # Unit-Tests der Bausteine und ein Lauf gegen den Mock-Server. Braucht
+  # weder GPU noch Zugangsdaten; der Mock startet im Test selbst.
+  # -------------------------------------------------------------------------
+  bench:
+    name: Testsuite (Unit und Mock)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # -t . = Repo-Wurzel als Startpunkt, damit "import bench" funktioniert
+      - name: Unit- und Mock-Tests
+        run: python3 -m unittest discover -s bench/tests -t . -v
+
+  # -------------------------------------------------------------------------
+  # Job 4 – Linter
   # ruff prüft Python (Regeln in ruff.toml), shellcheck prüft Bash-Skripte.
   # -------------------------------------------------------------------------
   lint:
