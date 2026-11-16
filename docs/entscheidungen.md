@@ -4,6 +4,122 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-16 – Keine Budgetgrenze im Skript; Ausgabenlimit im RunPod-Konto
+
+**Entscheidung:** `runpod/rp.py` bricht nicht mehr wegen eines Budgets ab; `RUNPOD_BUDGET_USD` entfällt. Das Skript zeigt vor dem Start weiter die geschätzten Kosten, fragt nach Bestätigung und verbucht jeden Pod in `results/kosten.csv` (`rp.py kosten` zeigt die Summe). Die Ausgabengrenze setzt ihr als Limit der hinterlegten Firmenkarte im RunPod-Konto.
+
+**Warum:** Ein Limit beim Anbieter gilt für alles, was über das Konto läuft – auch für Pods, die per Weboberfläche oder auf einem anderen Rechner gestartet werden. Eine Grenze im Skript würde nur Läufe vom selben Rechner sehen und doppelt pflegen, was das Konto ohnehin kann.
+
+## 2026-11-16 – pin.py holt Image-Digests direkt von der Registry
+
+**Entscheidung:** `profiles/pin.py` fragt Docker Hub bzw. ghcr.io direkt über die Registry-API (anonymes Lese-Token, Header `Docker-Content-Digest`); Docker ist nur noch Ersatzweg. Neu: `--trocken` zeigt an, was eingetragen würde, ohne das Profil zu ändern.
+
+**Warum:** Der Steuerrechner (Laptop) hat nicht unbedingt Docker. Angefragt wird der Multi-Arch-Index, damit derselbe Digest herauskommt wie bei `docker buildx imagetools inspect`.
+
+## 2026-11-16 – Kein fester Mediaserver mehr: beliebiger Steuerrechner, Chat-Stack optional
+
+**Entscheidung:**
+- Gesteuert wird von einem **beliebigen Rechner** mit Python 3.11 (zunächst ein Laptop). Alle eigenen Werte stehen in `benchmark.conf` (Vorlage `benchmark.conf.example`); `.env.example` entfällt, `.env` wird nur noch als Fallback gelesen.
+- Der Docker-Swarm-Stack mit LiteLLM ist **optional** und heißt jetzt `chat-stack/` statt `local/`. Er läuft auf jedem Linux-Rechner mit Docker.
+- Messungen gehen **direkt an vLLM**, nicht über LiteLLM.
+
+**Warum:**
+- Es gibt keinen Rechner mehr, der dauerhaft als Mediaserver bereitsteht. Die Testsuite braucht keine GPU und keinen Docker-Stack – nur Python und Netz zum GPU-Server.
+- Ziel des Projekts sind die Modelle und ihr Tempo. Der Chat-Stack hilft beim Ausprobieren und ist die Vorlage für den späteren Betrieb, beeinflusst aber keine Messung. Ein Gateway dazwischen könnte die Zahlen durch Caching sogar verfälschen.
+
+**Folgen:** Der RunPod-Watchdog läuft auf dem Steuerrechner – während eines Laufs darf ein Laptop nicht in den Ruhezustand. Bei Cloud-VMs übernimmt die maximale Laufzeit mit automatischem Löschen diese Rolle.
+
+## 2026-11-16 – Zielhardware bestätigt: EPYC 9745 und 2× RTX PRO 6000 Max-Q
+
+**Befund (Angabe des Nutzers):** Zielserver (Lenovo ThinkSystem) mit
+- 1× AMD EPYC 9745: 128 Kerne, 400 W, 2,4 GHz – Generation Zen 5c („Turin Dense“), 12 Speicherkanäle DDR5, laut Händlerangabe bis 576 GB/s
+- 2× RTX PRO 6000 Blackwell **Max-Q Workstation Edition**, je 96 GB, 300 W, PCIe Gen5
+
+Damit ist der Hinweis des Kollegen „EPYC 8004“ überholt: Der Zielserver hat einen EPYC 9005, keinen 8004. Die Richtung stimmt trotzdem – DDR5 und viele Speicherkanäle sind für DeepSeek V4.1 Flash mit CPU-Experten entscheidend.
+
+**Folgen:**
+- **RAM-Ausbau:** Für DeepSeek V4.1 Flash ≈ 250 GB nötig. Damit die volle Bandbreite ankommt, sollten **alle 12 Kanäle bestückt** sein (z. B. 12 × 32 GB = 384 GB). Mit weniger Modulen sinkt die Bandbreite – und damit das Tempo bei CPU-Auslagerung – fast proportional.
+- **Cloud-Ersatz:** Vast.ai bietet 2× RTX PRO 6000 **Max-Q** an (Screenshot des Nutzers, 16.11.2026: 2,80–5,47 $/h für beide Karten), aber nur mit älteren CPUs (EPYC 7742/7453/7B13 mit DDR4 und PCIe 4, oder Xeon). Für Qwen und GLM (komplett im VRAM) passt das: Die Karten sind dieselben. Für DeepSeek V4.1 Flash mit CPU-Experten ist keiner davon repräsentativ.
+- Der Host-Check misst die **RAM-Bandbreite**, damit Cloud-Ergebnisse auf den Zielserver umgerechnet werden können.
+
+**Quellen:** Angaben des Nutzers; [EPYC 9745: 12 Kanäle DDR5, 576 GB/s (Händlerangabe)](https://aio.lv/en/product--amd-100-000001460--11379842.md), [AMD-Produktseite EPYC 9745](https://www.amd.com/en/products/processors/server/epyc/9005-series/amd-epyc-9745.html)
+
+## 2026-11-16 – Zielhardware ist Max-Q (300 W); Skripte anbieterunabhängig
+
+**Befund:** Der eigene Server zeigt bei `nvidia-smi` ein Power-Limit von **300 W** – das spricht für die RTX PRO 6000 **Max-Q** Workstation Edition (Bestätigung mit `nvidia-smi --query-gpu=name,power.limit --format=csv` steht aus). Server- und Workstation-Edition in der Cloud laufen mit 600 W. Treiber 615.71.09 – derselbe, mit dem das DeepSeek-V4.1-Rezept getestet wurde.
+
+**Entscheidung:**
+- Das Startskript im Container ist für RunPod, Vast.ai und den eigenen Server gleich; RunPod ist nur eine Automatisierung obendrauf.
+- Modelle, die komplett im VRAM liegen (Qwen, GLM), dürfen in der Cloud gemessen werden. DeepSeek V4.1 Flash mit CPU-Auslagerung wird auf dem eigenen Server oder auf einem Host mit bekannter, ähnlicher CPU gemessen (Kollege: EPYC 8004 mit DDR5, ≈ 250 GB RAM).
+- Jeder Host-Check speichert Power-Limit und CPU-Modell.
+
+**Warum:**
+- Prefill ist Rechenarbeit und leidet unter 300 W; Cloud-Karten mit 600 W wären dort zu optimistisch. Decode hängt vor allem an der Speicherbandbreite, die bei allen Varianten gleich ist.
+- Bei CPU-Auslagerung bestimmen CPU, RAM-Bandbreite und NVMe das Tempo. RunPod lässt das CPU-Modell nicht auswählen; Vast.ai zeigt es pro Angebot (Stand 16.11.2026 pro Karte: WS ab 1,00 $/h, Median 1,49 $; S ab 1,33 $/h, Median 1,73 $ – laut Screenshot des Nutzers).
+
+## 2026-11-16 – DeepSeek V4.1 Flash ist das wichtigste Modell, Weg noch offen
+
+**Entscheidung:** DeepSeek V4.1 Flash (763B, Bilder, 1M Kontext) wird getestet. Offen ist, auf welchem Weg:
+
+| Weg | Hardware | Vorteil | Nachteil |
+|---|---|---|---|
+| A: Rezept theogravity | 2× RTX PRO 6000 (Zielhardware) | 512k Kontext, ≈ 250 tok/s bei einem Nutzer, 41,6 s bis zum ersten Token bei 505k (Angaben des Autors) | ein Autor, eine Maschine; gepatchtes vLLM, eigene Images müssen gebaut werden; Tempo hängt an CPU, RAM (≥ 128 GiB empfohlen) und NVMe des Hosts – bei RunPod-Community-Hosts nicht planbar |
+| B: Karmic Kraken `ds41-flash` | 4× RTX PRO 6000 | fertiges Image, Bilder verifiziert, ≈ 249 tok/s bei einem Nutzer (rtx6kpro-Wiki) | misst nicht die Zielhardware; ≈ 6,56 $/h |
+
+**Warum nicht einfach quantisieren:** Selbst mit 3 Bit sind es ≈ 322 GiB Gewichte, also deutlich mehr als 192 GB VRAM.
+
+**Quellen:** [theogravity/deepseek-flash-v4.1-dual-rtx-6000](https://github.com/theogravity/deepseek-flash-v4.1-dual-rtx-6000), [rtx6kpro: DeepSeek V4.1 Flash](https://github.com/local-inference-lab/rtx6kpro/blob/master/models/deepseek-v4.1-flash.md)
+
+## 2026-11-16 – Geldschonend: Community Cloud ohne Network Volume
+
+**Entscheidung:** GPU-Pods laufen standardmäßig in der **Community Cloud**. Es gibt **kein Network Volume**; die Gewichte lädt jeder Pod beim Start auf seine Container-Disk. Alle Testblöcke eines Modells laufen in **einem** Pod am Stück. Ein Budget in `.env` (`RUNPOD_BUDGET_USD`) begrenzt die Summe aller Läufe.
+
+**Warum:**
+- Preis pro Karte und Stunde (on-demand, Stand 15.11.2026): Community 1,64 $, Secure 2,69 $. Für 2 Karten 3,28 $/h gegen 5,38 $/h.
+- Network Volumes gibt es bei RunPod **nur in der Secure Cloud** und kosten 0,07 $/GB/Monat, auch ohne laufenden Pod. 600 GB für alle Modelle wären ca. 42 $/Monat.
+- Ein Download von ca. 30–190 GB beim Start kostet in der Community Cloud nur wenige Minuten GPU-Zeit. Bei geschätzt 6–8 Pod-Starts ist das günstiger als Volume plus Secure-Aufpreis.
+- Jeder Kaltstart (Laden, JIT, Autotuning) kostet 10–20 Minuten. Deshalb ein Pod pro Modell, nicht pro Block.
+
+**Folgen:** Phase 3 (Network Volume vorbefüllen) entfällt. Die Secure Cloud mit Volume bleibt als Option im Skript, falls Community-Hosts kein P2P bieten.
+
+**Risiko:** Community-Hosts sind unterschiedlich gut, P2P zwischen den Karten klappt nicht überall. Der Pod-Check verwirft solche Hosts nach wenigen Minuten.
+
+**Quellen:** [computeprices.com, RunPod RTX PRO 6000](https://computeprices.com/providers/runpod/gpus/rtx-pro-6000), [RunPod-Doku Network Volumes](https://docs.runpod.io/storage/network-volumes)
+
+## 2026-11-16 – RunPod REST-API v2
+
+**Entscheidung:** Die Skripte nutzen `https://api.runpod.io/v2`.
+
+**Warum:** Die v1-API (`rest.runpod.io/v1`) ist laut RunPod zum 15.11.2026 abgeschaltet. In v2 heißen Felder anders (`gpu: {id, count}` statt `gpuTypeIds`, `cloud` statt `cloudType`, Standard ist `SECURE`), und es gibt kein Feld für eine maximale Laufzeit – der Watchdog bleibt also unsere Aufgabe.
+
+**Quelle:** [RunPod: Migrate from v1](https://docs.runpod.io/api-reference-v2/migrate-from-v1), [Create a Pod](https://docs.runpod.io/api-reference-v2/pods/create-a-pod)
+
+## 2026-11-16 – Neue Modellauswahl: Bilder, Agenten, Kosten
+
+**Entscheidung:** Testreihenfolge (siehe [README](../README.md#modell-kandidaten)):
+
+0. **Qwen3.8-27B** als Referenz und für den ersten GPU-Test
+1. **Qwen3.8-Flash-Next** (FP8, N-gram-Tabelle im Host-RAM)
+2. **GLM-5.3-Flash** als `nvidia/GLM-5.3-Flash-FP4-Local`
+3. DeepSeek V4 Flash und GLM über die Purtell-Runtime nur bei Restbudget
+
+**Warum:**
+- **Bilder und Agenten sind neue Anforderungen.** DeepSeek V4 Flash kann nur Text. Die Bild-Variante DeepSeek-V4-Flash-Vision-Exp braucht laut vLLM-Recipe ca. 202 GB VRAM und gilt auf 2 Karten als nicht unterstützt.
+- **Qwen3.8-27B zuerst:** offizielles vLLM-Recipe für die RTX Pro 6000, nur ca. 29 GB Download, läuft auf einer Karte. Damit lässt sich die ganze Kette (Pod, Check, Testsuite) für wenig Geld prüfen, bevor ein großes Modell Stunden kostet. Danach dient es als Referenz: Ist ein großes Modell schlecht, zeigt der Vergleich, ob es am Modell oder an der Umgebung liegt.
+- **Qwen3.8-Flash-Next:** unabhängig gemessen auf 2× RTX PRO 6000 ca. 146 tok/s mit MTP bei 512k Kontext (stondo), läuft mit Upstream-vLLM ohne Spezial-Runtime.
+- **GLM-5.3-Flash FP4-Local:** NVIDIA hat genau diese Hardware validiert (ca. 166 GiB, 1,8 Mio. Token FP8-KV-Cache). Laut Z.ai die besten Agenten-Werte unter den Kandidaten (Herstellerangaben). Ein Community-Test meldete auf SM120 Endlosschleifen in der Ausgabe – deshalb gibt es jetzt den Qualitäts-Wächter in der Testsuite.
+- **Purtell-EXL3 wird nicht gestrichen**, aber nachrangig: Das Ziel ist ausdrücklich vLLM, und der NVIDIA-Checkpoint läuft in einem vLLM-Container.
+
+**Herstellerangaben vs. Messung:** Die Agenten-Benchmarks (Terminal-Bench, SWE-bench, Toolathlon) stammen fast alle von den Herstellern. Entschieden wird nach unseren eigenen Messungen.
+
+**Quellen:** [vLLM Recipes](https://recipes.vllm.ai/browse), [nvidia/GLM-5.3-Flash-FP4-Local](https://huggingface.co/nvidia/GLM-5.3-Flash-FP4-Local), [stondo: Qwen3.8-Flash-Next auf 2× RTX PRO 6000](https://stondo.github.io/posts/qwen38-flash-next-512k-two-rtx-pro-6000/), [Qwen3.8-27B Recipe](https://recipes.vllm.ai/Qwen/Qwen3.8-27B), [DeepSeek-V4-Flash-Vision-Exp Recipe](https://recipes.vllm.ai/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp)
+
+## 2026-11-16 – Testsuite misst gegen Ziele (SLOs), nicht nur Durchsatz
+
+**Entscheidung:** Der Lastmix steigt bis 30 Nutzer und wird gegen feste Zielwerte bewertet: Zeit bis zum ersten Token im Chat (p90) und Ausgabetempo pro Nutzer. Ergebnis ist die größte Nutzerzahl, bei der die Ziele noch eingehalten werden. Neu dazu kommen die Blöcke Bilder, Agentenschleife und Qualitäts-Wächter.
+
+**Warum:** Die eigentliche Frage ist „Wie viele Nutzer schafft das Modell, bevor es zu langsam wird?“. Reine Durchsatzzahlen beantworten das nicht. Spekulatives Decoding wird mit natürlichen Texten gemessen, nicht mit Zufallstokens, sonst sind die Akzeptanzraten unrealistisch.
+
 ## 2026-11-01 – Testsuite nach V-Modell, ABAP als automatisch geprüfter Eval
 
 **Entscheidung:** Die Tests werden in vier Ebenen gegliedert (Unit, Integration, System, Abnahme) und über eine Kommandozeile blockweise gestartet. Die Modellqualität bei ABAP wird als eigener Eval-Block gemessen: Codeblöcke werden mit abaplint geprüft, dazu kommt eine feste Kriterienliste je Aufgabe.

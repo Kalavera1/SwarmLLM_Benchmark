@@ -1,4 +1,4 @@
-# Swarm-Stack für den Mediaserver: LiteLLM als Gateway plus Mock-Server.
+# Swarm-Stack (optionaler Chat-Zugang): LiteLLM als Gateway plus Mock-Server.
 # Nicht direkt deployen, sondern über ./deploy.sh – das Skript prüft die Pins,
 # legt fehlende Secrets an und setzt die Config-Namen (Swarm-Configs sind
 # unveränderlich, deshalb steckt ein Hash des Inhalts im Namen).
@@ -31,7 +31,7 @@ services:
     secrets:
       - litellm_master_key
       - mock_api_key
-    # Modus "host": Port direkt am Mediaserver, ohne Swarm-Routing-Mesh.
+    # Modus "host": Port direkt am Host, ohne Swarm-Routing-Mesh.
     # Die bestehende OpenWebUI erreicht LiteLLM über die LAN-IP:4000.
     ports:
       - target: 4000

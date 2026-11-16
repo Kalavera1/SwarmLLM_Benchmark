@@ -1,20 +1,26 @@
 # SwarmLLM_Benchmark
 
-Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× NVIDIA RTX PRO 6000 Blackwell** (je 96 GB, SM120, kein NVLink) betreiben, vergleichen und vermessen – mit **LiteLLM** als Gateway und **OpenWebUI** als Frontend.
+Testprojekt: große Open-Weight-Modelle mit vLLM auf **2× NVIDIA RTX PRO 6000 Blackwell** (je 96 GB, SM120, kein NVLink) betreiben, vergleichen und vermessen – gemietet in der Cloud oder auf einem eigenen Server.
+
+**Maschinenunabhängig:** Gesteuert wird von einem beliebigen Rechner mit Python 3.11 (Laptop, PC mit WSL, Server). Gemessen wird gegen einen beliebigen GPU-Server mit Docker oder einen RunPod-Pod. Alle eigenen Werte stehen in einer Datei, `benchmark.conf`.
+
+**Loslegen:** [ANLEITUNG.md](ANLEITUNG.md) – Schritt für Schritt vom leeren Rechner bis zur Vergleichstabelle.
 
 ## Ziel
 
 - **Kontext:** mindestens 500.000, möglichst 1.000.000 Tokens pro Anfrage
 - **Realistische Last:** ca. 30 Nutzer, davon ca. 4 mit Vibe Coding (lange, wachsende Kontexte), der Rest Chat über OpenWebUI
-- **Kosten minimal:** GPU-Instanz läuft nur für Messläufe und wird danach sofort gelöscht
+- **Bildverständnis:** Das Modell soll Bilder verarbeiten können (Screenshots, Diagramme)
+- **Agenten:** Das Modell soll als Arbeitsmodell für einen autonomen Agenten (Hermes Agent) taugen – zuverlässige Tool-Calls, mindestens 64k Kontext
+- **Kosten minimal:** GPU-Instanz läuft nur für Messläufe und wird danach sofort gelöscht. Die Ausgabengrenze steht als Limit im RunPod-Konto
 
 ## Regeln
 
 1. **Strikt isoliert. Kein Bezug zu anderen Stackprojekten.** Kein Code, keine Configs, keine Zugangsdaten, keine Actions-Runner von Konfliktparteien.
-2. **Keine Secrets im Repo.** Zugangsdaten für Skripte nur in `.env` (steht in `.gitignore`, Vorlage: `.env.example`). Zugangsdaten für den lokalen Stack als Docker Secrets.
+2. **Keine Secrets im Repo.** Zugangsdaten für Skripte nur in `benchmark.conf` (steht in `.gitignore`, Vorlage: `benchmark.conf.example`). Zugangsdaten für den optionalen Chat-Stack als Docker Secrets.
 3. **Keine Gewichte, Caches oder Container-Layer im Repo.**
 4. **Alles gepinnt.** Container-Images per Digest (`@sha256:…`), Checkpoints per Revision (Commit-Hash). Nie wandernde Tags wie `latest` oder `-beta`.
-5. **Kein GPU-Lauf ohne Auto-Stopp.** Jeder Pod bekommt einen Watchdog, damit keiner vergessen wird.
+5. **Kein GPU-Lauf ohne Auto-Stopp.** RunPod-Pods bekommen einen Watchdog, Cloud-VMs eine maximale Laufzeit mit automatischem Löschen – damit keiner vergessen wird.
 6. **Ergebnisse sind nachvollziehbar.** Jede Messung speichert Datum, Image-Digest, Checkpoint-Revision, Startparameter und Hardware.
 7. **Schrittweise.** Jede Phase endet mit einem Review, bevor die nächste beginnt (siehe [Roadmap](docs/roadmap.md)).
 8. **Nie ein offener Endpunkt.** vLLM läuft immer mit `VLLM_API_KEY`. Jeder Pod-Check prüft, dass eine Anfrage ohne Key abgewiesen wird.
@@ -23,50 +29,69 @@ Privates Testprojekt: große Open-Weight-Modelle mit vLLM auf **gemieteten 2× N
 
 ```mermaid
 flowchart LR
-  B[Browser] -->|:8081| OW
-
-  subgraph MS["Mediaserver (Linux)"]
-    OW["OpenWebUI<br/>bestehend, Compose"]
-    subgraph SW["Docker Swarm"]
-      LL["LiteLLM :4000<br/>Gateway, Keys"]
-      MO["Mock-Server<br/>OpenAI-API, ohne GPU"]
-    end
-    BS["Benchmark-Skripte"]
+  subgraph ST["Steuerrechner – beliebig<br/>(Laptop, PC mit WSL, Server)"]
+    KO["benchmark.conf<br/>Zugangsdaten, Ziel"]
+    BS["Testsuite bench/<br/>Profile, Ergebnisse"]
+    RC["runpod/rp.py<br/>nur für RunPod"]
   end
 
-  subgraph RP["RunPod – nur während Messläufen"]
-    V["vLLM im Pod<br/>2× RTX PRO 6000<br/>OpenAI-API mit API-Key"]
-    NV[("Network Volume<br/>Gewichte + Caches")]
+  subgraph GS["GPU-Server – beliebig, nur während Messläufen"]
+    SK["Startskript im Container<br/>Host-Check, Download, vLLM-Start"]
+    V["vLLM :8000<br/>OpenAI-API mit API-Key"]
+    SS["Status-Seite :8001"]
   end
 
-  OW -->|OpenAI-API| LL
-  LL -.->|Tests| MO
-  LL -->|"SSH-Tunnel / TCP-Port"| V
-  BS -.->|"direkt, ohne Gateway"| V
-  V --- NV
+  BS -->|"Anfragen mit API-Key<br/>direkter TCP-Port"| V
+  RC -.->|"Pod anlegen / löschen<br/>Watchdog"| GS
+  SK --> V
+  BS -.->|"Fortschritt, Host-Daten"| SS
+  V -->|"gepinnte Revision"| HF["Hugging Face"]
 
-  PC["PC mit WSL<br/>Entwicklung, Review"] -->|"Pull Request"| GH["GitHub<br/>SwarmLLM_Benchmark"]
-  GH -->|"git pull"| MS
+  subgraph OP["Optional: Chat-Zugang"]
+    OW["OpenWebUI"] --> LL["LiteLLM :4000"]
+  end
+  LL -.-> V
 ```
 
-- **Durchgezogene Pfeile:** Betrieb. **Gestrichelte Pfeile:** Tests und Messungen.
-- Der PC mit WSL läuft nicht dauerhaft. Er dient nur zum Entwickeln und Reviewen; betrieben wird alles vom Mediaserver aus.
+**Steuerrechner** – jeder Rechner mit Python 3.11 und `git`, keine GPU nötig. Er hält `benchmark.conf`, startet und beendet GPU-Server, führt die Testsuite aus und speichert die Ergebnisse. Nur bei RunPod läuft hier auch der Watchdog; dann muss der Rechner während des Laufs an bleiben.
 
-- **Warum das vLLM-Image direkt als Pod-Image?** In RunPod-Pods ist kein eigenes Docker und kein Docker Compose möglich. Konfiguration läuft über Umgebungsvariablen und das Startkommando.
-- **Warum auf dem Mediaserver?** Dort läuft die OpenWebUI, die tatsächlich genutzt wird, und der Rechner ist dauerhaft an. In WSL wäre LiteLLM für andere Rechner nur mit zusätzlicher Netzwerk-Einrichtung erreichbar (WSL2 hängt hinter eigenem NAT).
-- **Warum LiteLLM als Gateway?** Die bestehende OpenWebUI bekommt einmalig LiteLLM als Verbindung. Pro Testlauf ändert sich nur das Ziel in LiteLLM (Mock, aktueller Pod, später andere Modelle) – OpenWebUI muss dafür nie umkonfiguriert oder neu gestartet werden. Zusätzlich verwaltet LiteLLM die Keys, sodass der vLLM-Key nie in OpenWebUI landet.
-- **Warum nicht über den RunPod-HTTP-Proxy?** Er trennt stille Verbindungen nach ca. 2 Minuten. Ein kalter 1M-Prompt dauert auf dieser Hardware länger (siehe [Erfahrungen](docs/erfahrungen.md)).
-- **Warum Docker Swarm?** Native Secrets, Healthchecks mit automatischem Neustart und ein Stack-File, das später auf weitere Nodes wachsen kann. Swarm umfasst nur den Mediaserver: Der RunPod-Pod kann kein Swarm-Node werden (kein Docker im Pod, kein UDP). Die bestehende OpenWebUI bleibt unverändert in Compose.
+**GPU-Server** – überall, wo das vLLM-Image mit zwei GPUs läuft. Das Startskript `server/start-im-container.sh` ist überall dasselbe, damit Messungen vergleichbar bleiben:
+
+| Weg | Start | Wofür |
+|---|---|---|
+| RunPod | `python3 runpod/rp.py up <profil>` (automatisch, mit Kostenanzeige und Watchdog) | Modelle komplett im VRAM (Qwen, GLM) |
+| Google Cloud G4 | VM anlegen, dann `server/lokal-starten.sh <profil>` | wenn die CPU zählt: AMD EPYC Turin wie der Zielserver |
+| Vast.ai | Image und Startskript per Oberfläche | CPU-Modell vor dem Mieten sichtbar |
+| Eigener Server | `server/lokal-starten.sh <profil>` | endgültige Messung auf der Zielhardware |
+
+**Optional: Chat-Zugang** – OpenWebUI mit LiteLLM als Gateway (Ordner `chat-stack/`, Docker-Swarm-Stack, auf einem beliebigen Linux-Rechner mit Docker), um ein Modell während eines Laufs selbst auszuprobieren. Für die Messungen nicht nötig; die Testsuite misst direkt gegen vLLM.
+
+Warum so:
+- **Das vLLM-Image direkt als Container**, nicht von Hand installiert: Die Handinstallation scheiterte beim B300-Test an CUDA- und PyTorch-Versionen. In RunPod-Pods gibt es außerdem kein eigenes Docker.
+- **Direkter TCP-Port statt RunPod-HTTP-Proxy:** Der Proxy trennt stille Verbindungen nach ca. 2 Minuten. Ein kalter 1M-Prompt dauert auf dieser Hardware länger (siehe [Erfahrungen](docs/erfahrungen.md)).
+- **Kein Network Volume:** Volumes gibt es bei RunPod nur in der Secure Cloud und kosten auch ohne laufenden Pod. Jeder Pod lädt die gepinnte Revision selbst (siehe [Entscheidungslog](docs/entscheidungen.md)).
+- **LiteLLM vor OpenWebUI:** OpenWebUI bekommt einmalig LiteLLM als Verbindung. Pro Lauf ändert sich nur das Ziel in LiteLLM, und der vLLM-Key landet nie in OpenWebUI. Messungen gehen bewusst nicht über LiteLLM, damit kein Gateway-Cache die Zahlen schönt.
+
+## Zielhardware
+
+1× AMD EPYC 9745 (128 Kerne, Zen 5c, 12 Kanäle DDR5) und 2× NVIDIA RTX PRO 6000 Blackwell **Max-Q** Workstation Edition (je 96 GB, 300 W, PCIe Gen5). Messungen auf anderer Hardware (Cloud) speichern Power-Limit, CPU und RAM-Bandbreite, damit sie sich einordnen lassen.
 
 ## Modell-Kandidaten
 
-| Modell | Runtime | Checkpoint | Status |
-|---|---|---|---|
-| DeepSeek V4 Flash | Karmic Kraken (`ghcr.io/local-inference-lab/vllm`), per Digest gepinnt | wird in Phase 4 festgelegt | geplant |
-| GLM-5.3-Flash | Runtime von T.J. Purtell (`tpurtell/glm-5.3-flash-ext3-2x-rtx`), Profil `k3` | EXL3 K3, Revision wird in Phase 6 gepinnt | geplant |
-| Qwen3.8-Flash-Next | offen | `nvidia/Qwen3.8-Flash-Next-FP4-Local` | später |
+Reihenfolge = Testreihenfolge. Stand: Recherche vom 16.11.2026.
 
-Warum diese Auswahl: siehe [Entscheidungslog](docs/entscheidungen.md).
+| # | Modell | Bilder | Runtime | Checkpoint | Status |
+|---|---|---|---|---|---|
+| ★ | **DeepSeek V4.1 Flash** (763B, wichtigstes Modell) | ja | 2 Karten: gepatchtes vLLM mit CPU-Experten (Rezept theogravity), 4 Karten: Karmic Kraken `ds41-flash` | 2 Karten: `diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000` (≈ 322 GiB), 4 Karten: `deepseek-ai/DeepSeek-V4.1-Flash` | Weg offen: eigener Server oder 4× RunPod |
+| 0 | Qwen3.8-27B (Referenz, dense) | ja | vLLM (offizielles Recipe für RTX Pro 6000) | `nvidia/Qwen3.8-27B-NVFP4` | Phase 4: erster GPU-Test |
+| 1 | Qwen3.8-Flash-Next (125B + 51B N-gram, 6B aktiv) | ja | vLLM ≥ 0.30 (Nightly) | `Qwen/Qwen3.8-Flash-Next-FP8`, N-gram-Tabelle im Host-RAM | Phase 5 |
+| 2 | GLM-5.3-Flash (320B, 18B aktiv) | ja | vLLM-Container von Local Inference Lab | `nvidia/GLM-5.3-Flash-FP4-Local` (~166 GiB, von NVIDIA auf 2× RTX PRO 6000 validiert) | Phase 6 |
+| 2b | GLM-5.3-Flash | ja | Runtime von T.J. Purtell (`tpurtell/glm-5.3-flash-ext3-2x-rtx`), Profil `k3` | EXL3 K3 (~127 GiB) | optional |
+| 3 | DeepSeek V4 Flash (284B, 13B aktiv) | **nein** | Karmic Kraken (`ghcr.io/local-inference-lab/vllm`), SM120-Patches | `deepseek-ai/DeepSeek-V4-Flash-0731` | optional, nach den anderen |
+
+**Passen nicht auf 2× 96 GB** (nur per API sinnvoll): GLM-5.3, Qwen3.5-397B. DeepSeek V4.1 Flash passt nur mit Auslagerung von Experten auf die CPU und der Engram-Tabellen auf die NVMe (siehe Entscheidungslog).
+
+Warum diese Auswahl und Reihenfolge: siehe [Entscheidungslog](docs/entscheidungen.md).
 
 ## Lizenzen beachten
 
@@ -76,25 +101,23 @@ Warum diese Auswahl: siehe [Entscheidungslog](docs/entscheidungen.md).
 
 ## Struktur
 
-Ordner entstehen erst in der Phase, in der sie gebraucht werden.
-
 ```
 .
 ├── README.md
 ├── ANLEITUNG.md        Schritt für Schritt: Messläufe vom Laptop aus
 ├── benchmark.conf.example  alle eigenen Werte (Kopie benchmark.conf, nicht im Repo)
 ├── CLAUDE.md           Arbeitsregeln für Claude-Sitzungen
-├── .env.example        Vorlage für Zugangsdaten (echte Werte nur in .env)
 ├── .github/workflows/  CI: Secret-Scan, Pin-Prüfung, Linter
 ├── ci/                 Prüfskripte der CI mit Unit-Tests
 ├── docs/
 │   ├── roadmap.md      Phasen, Ergebnisse, Review-Kriterien
 │   ├── entscheidungen.md
 │   └── erfahrungen.md  Lehren aus früheren Tests
-├── local/              Phase 1: Swarm-Stack mit LiteLLM + Mock-Server (Anleitung: local/README.md)
-├── bench/              Phase 2: Testsuite (V-Modell), blockweise startbar
-├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen (Anleitung: runpod/README.md)
-├── server/             Startskript im Container, docker run für eigenen Server
-├── profiles/           Phase 4+: ein Ordner pro Modell
-└── results/            Messergebnisse (JSON + Zusammenfassung)
+├── chat-stack/         optional: Chat-Zugang mit LiteLLM + Mock-Server (Anleitung: chat-stack/README.md)
+├── bench/              Testsuite (V-Modell), blockweise startbar (Anleitung: bench/README.md)
+├── runpod/             RunPod automatisch: Pod anlegen, prüfen, löschen (Anleitung: runpod/README.md)
+├── server/             Startskript im Container (alle Wege), docker run für eigene Server und Cloud-VMs
+├── profiles/           ein Ordner pro Modell (Anleitung: profiles/README.md)
+├── results/            Messergebnisse (JSON + Zusammenfassung), Messreihe v1
+└── archiv/             frühere Testläufe, unverändert, mit Steckbrief (Messreihe v0)
 ```

@@ -1,6 +1,6 @@
 """Integrationstest: Client und Blöcke gegen den echten Mock-Server.
 
-Startet local/mock/mock_openai.py als Unterprozess auf einem freien Port (mit
+Startet chat-stack/mock/mock_openai.py als Unterprozess auf einem freien Port (mit
 API-Key, wie vLLM) und prüft Streaming, Tool-Calls, Key-Schutz und dass Blöcke
 ein gültiges Ergebnis-JSON schreiben. Kein Netz nach außen, keine GPU.
 """
@@ -22,7 +22,7 @@ from bench.bloecke import BLOECKE
 from bench.client import Client
 from bench.konfig import REPO, Profil, Ziel
 
-MOCK = REPO / "local" / "mock" / "mock_openai.py"
+MOCK = REPO / "chat-stack" / "mock" / "mock_openai.py"
 KEY = "test-key-nur-fuer-unittests"  # gitleaks: kein echtes Secret
 
 
