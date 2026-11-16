@@ -4,6 +4,22 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-17 – Auto-Stopp auf Vast.ai: Die Instanz löscht sich selbst
+
+**Entscheidung:** `server/im-container-starten.sh` startet auf Vast.ai einen Watchdog (`server/vast-watchdog.sh`), der die Instanz nach 90 Min. (oder `--minuten N`) über die Vast-API löscht. Er läuft in der Instanz selbst und nutzt den Key, den Vast.ai jeder Instanz nur für sie mitgibt (`CONTAINER_API_KEY`). Zeitpunkt sichtbar unter `:8001/watchdog.json`; verlängern durch neu Stellen, ein „aus“ gibt es nicht.
+
+**Warum:** Regel 5 – kein GPU-Lauf ohne Auto-Stopp. Bei Vast.ai legt man die Instanz in der Weboberfläche an; ein Watchdog auf dem Laptop wie bei RunPod würde einen Vast-Key für das ganze Konto auf dem Laptop brauchen und endet, wenn der Laptop zuklappt. Der Key der Instanz verlässt die Instanz nie. In der Vast-Doku fand sich keine maximale Laufzeit mit Löschen; das Ende der Mietdauer **stoppt** die Instanz nur.
+
+**Noch nicht selbst geprüft:** Getestet ist der Ablauf gegen eine nachgebaute API (DELETE mit Bearer-Key kommt an). Ob die echte API den Instanz-Key per REST für DELETE annimmt, steht so nur mittelbar in der Doku (dort per CLI). Deshalb steht in [anleitung/vast-ai.md](../anleitung/vast-ai.md) ein einmaliger Test mit einer billigen Instanz.
+
+**Quellen (abgerufen 17.11.2026):** [Vast.ai: Docker-Umgebung – CONTAINER_ID, CONTAINER_API_KEY, Löschen von innen](https://docs.vast.ai/guides/instances/docker-environment), [Vast.ai: Instanz löschen – DELETE /api/v0/instances/{id}](https://docs.vast.ai/destroy-an-instance), [Vast.ai: API mit Bearer-Key](https://docs.vast.ai/api-reference/hello-world), [Vast.ai FAQ: Mietende stoppt die Instanz](https://docs.vast.ai/guides/reference/faq/instances)
+
+## 2026-11-17 – Anleitung je GPU-Server getrennt
+
+**Entscheidung:** `ANLEITUNG.md` enthält nur noch, was für jeden GPU-Server gleich ist: einrichten, pinnen, messen, Ergebnisse. Starten, Prüfen und Abbauen des GPU-Servers steht je Anbieter in `anleitung/` (RunPod, Google Cloud, Vast.ai, eigener Server). Für Vast.ai kommt `server/im-container-starten.sh` dazu: startet das gemeinsame Startskript im schon laufenden Container, ohne `docker run`.
+
+**Warum:** RunPod-Schritte wie `rp.py gpus` standen unter den allgemeinen Schritten und wirkten wie Pflicht für jeden Weg (Hinweis des Nutzers). Getrennte Dokumente zeigen pro Anbieter nur, was dort wirklich zu tun ist.
+
 ## 2026-11-17 – Nur 2 Karten; GLM-5.3 Q3 ist das wichtigste Modell
 
 **Entscheidung:**

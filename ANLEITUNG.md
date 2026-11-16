@@ -40,12 +40,13 @@ Zwei Hauptwerkzeuge, beide startest du auf dem **[Laptop]**:
 | `profiles/pin.py` | Modell-Revision und Image-Digest ins Profil eintragen | [Laptop], einmal pro Modell |
 | `server/start-im-container.sh` | Host prüfen, Modell laden, vLLM starten | im Container auf dem [Server], automatisch – du rufst es nie selbst auf |
 | `server/lokal-starten.sh` | startet den Container mit dem Startskript per `docker run` | auf dem [Server], bei Google Cloud und eigenem Server |
-| `server/im-container-starten.sh` | startet das Startskript direkt im schon laufenden Container | auf dem [Server], bei Vast.ai |
+| `server/im-container-starten.sh` | startet das Startskript direkt im schon laufenden Container und auf Vast.ai den Watchdog | auf dem [Server], bei Vast.ai |
+| `server/vast-watchdog.sh` | Auto-Stopp auf Vast.ai: Die Instanz löscht sich nach Ablauf selbst; anzeigen oder verlängern | auf dem [Server], bei Vast.ai |
 
 Ein Lauf als Kette:
 - **RunPod:** `pin.py` (einmal) → `rp.py up` → `rp.py warten` → `rp.py check` → `bench run alle` → `rp.py down`
 - **Google Cloud, eigener Server:** `pin.py` (einmal) → VM bereitstellen → `lokal-starten.sh` → `bench run alle` → `lokal-starten.sh … stopp` bzw. VM löschen
-- **Vast.ai:** `pin.py` (einmal) → Instanz mit vLLM-Image anlegen → `im-container-starten.sh` → `bench run alle` → Instanz löschen
+- **Vast.ai:** `pin.py` (einmal) → Instanz mit vLLM-Image anlegen → `im-container-starten.sh` (startet auch den Watchdog) → `bench run alle` → Instanz löschen
 
 ## GPU-Server wählen
 
@@ -53,7 +54,7 @@ Ein Lauf als Kette:
 |---|---|---|---|---|
 | **RunPod** | [anleitung/runpod.md](anleitung/runpod.md) | Modelle komplett im VRAM (Qwen, GLM-5.3-Flash) | RTX PRO 6000, CPU nicht wählbar | Watchdog von `rp.py` auf dem Laptop |
 | **Google Cloud G4** | [anleitung/google-cloud.md](anleitung/google-cloud.md) | wenn die CPU zählt (GLM-5.3 Q3, DeepSeek V4.1 Flash) | 2× RTX PRO 6000 + AMD EPYC Turin | maximale VM-Laufzeit |
-| **Vast.ai** | [anleitung/vast-ai.md](anleitung/vast-ai.md) | Max-Q-Karten wie der Zielserver | CPU vor dem Mieten sichtbar | keiner – selbst löschen |
+| **Vast.ai** | [anleitung/vast-ai.md](anleitung/vast-ai.md) | Max-Q-Karten wie der Zielserver | CPU vor dem Mieten sichtbar | Watchdog in der Instanz löscht sie selbst |
 | **Eigener Server** | [anleitung/eigener-server.md](anleitung/eigener-server.md) | endgültige Messung auf der Zielhardware | EPYC 9745 + 2× Max-Q | nicht nötig |
 
 Bei jedem gemieteten Server gilt: **beim Anbieter ein Ausgabenlimit setzen** – die Skripte zeigen Kosten nur an.

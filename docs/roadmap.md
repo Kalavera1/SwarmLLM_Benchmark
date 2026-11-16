@@ -75,7 +75,8 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 **Ergebnis:**
 - `server/start-im-container.sh`: ein Startskript für alle GPU-Server (RunPod, Cloud-VM, Vast.ai, eigener Server) mit Host-Check (P2P, CPU, RAM-Bandbreite, Power-Limit); `server/lokal-starten.sh` für Rechner mit Docker.
-- `benchmark.conf` für alle eigenen Werte und `ANLEITUNG.md` für den Ablauf von einem beliebigen Steuerrechner aus.
+- `benchmark.conf` für alle eigenen Werte und `ANLEITUNG.md` für den Ablauf von einem beliebigen Steuerrechner aus; Starten und Abbauen des GPU-Servers je Anbieter in `anleitung/` (RunPod, Google Cloud, Vast.ai, eigener Server).
+- `server/im-container-starten.sh` für Anbieter mit SSH in den Container (Vast.ai) und `server/vast-watchdog.sh`: Die Vast-Instanz löscht sich nach Ablauf selbst (Regel 5).
 - `runpod/` für die REST-API v2: GPU-Typen anzeigen, Pod anlegen, prüfen, Status, löschen. Ohne Network Volume: Der Pod lädt die gepinnte Revision beim Start selbst.
 - Vor jedem Start Kostenschätzung und Bestätigung. Jeder Pod wird mit tatsächlichen Kosten in `results/kosten.csv` verbucht. Die Ausgabengrenze steht im RunPod-Konto (Kartenlimit).
 - Watchdog auf dem Steuerrechner, der den Pod nach `POD_MAX_MINUTES` terminiert.
