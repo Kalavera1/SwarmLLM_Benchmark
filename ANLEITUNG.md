@@ -41,15 +41,13 @@ Ein RunPod-Lauf sieht damit so aus: `pin.py` (einmal) → `rp.py up` → `rp.py 
 
 ---
 
-## Teil 1 – Einmalig einrichten (kostenlos)
+## Teil 1 – Einmalig einrichten (kostenlos, für jeden Weg)
 
-Schritte mit **(nur RunPod)** brauchst du nur, wenn du über RunPod mit `rp.py` misst. Für Google Cloud, Vast.ai oder den eigenen Server überspringst du sie.
+Diese Schritte brauchst du immer – egal ob RunPod, Google Cloud, Vast.ai oder eigener Server. Was nur für RunPod nötig ist, steht in Teil 3.
 
-### 1.1 Konto und Limit [Web]
+### 1.1 Hugging-Face-Token [Web]
 
-1. **(nur RunPod)** RunPod-Konto anlegen, Firmenkarte hinterlegen und **ein Ausgabenlimit setzen**. Das Limit ist die einzige Kostenbremse über alle Läufe; die Skripte zeigen Kosten nur an. Bei anderen Anbietern gilt dasselbe: Limit dort setzen.
-2. **(nur RunPod)** Unter **Settings → API Keys** einen Key nur für dieses Projekt anlegen und kopieren.
-3. Bei Hugging Face unter **Settings → Access Tokens** einen Read-Token anlegen.
+Bei Hugging Face unter **Settings → Access Tokens** einen Read-Token anlegen und kopieren.
 
 ### 1.2 Steuerrechner vorbereiten [Laptop]
 
@@ -69,7 +67,7 @@ Optional für die ABAP-Syntaxprüfung: Node.js (`sudo apt install -y nodejs npm`
 ```bash
 cp benchmark.conf.example benchmark.conf
 chmod 600 benchmark.conf           # nur du darfst die Datei lesen
-nano benchmark.conf                # HF_TOKEN eintragen; RUNPOD_API_KEY nur für RunPod
+nano benchmark.conf                # HF_TOKEN eintragen
 ```
 
 Die Kommentare in der Datei erklären jeden Wert. `benchmark.conf` kommt nie ins Repo.
@@ -105,17 +103,7 @@ Für die Messungen reicht der vLLM-Key. Kommt später LiteLLM als Gateway für O
 
 Quellen: LiteLLM-Doku zu [Verschlüsselung und Salt-Key](https://docs.litellm.ai/docs/proxy/security_encryption_faq) und [virtuellen Keys](https://docs.litellm.ai/docs/proxy/virtual_keys). Der heutige `chat-stack/` nutzt nur den Master-Key; Salt-Key, Datenbank und virtuelle Keys kommen erst mit dem Betrieb dazu.
 
-### 1.4 GPU-Typ ermitteln [Laptop] – nur RunPod
-
-```bash
-python3 runpod/rp.py gpus
-```
-
-**Was passiert:** Das Skript fragt bei der RunPod-API die GPU-Typen ab und zeigt die RTX PRO 6000. Die angezeigte `id` als `RUNPOD_GPU_ID` in `benchmark.conf` eintragen.
-
-Bei Google Cloud, Vast.ai oder dem eigenen Server wählst du die GPU beim Anbieter bzw. sie steckt schon im Server – diesen Schritt überspringen.
-
-### 1.5 Selbsttest ohne GPU [Laptop]
+### 1.4 Selbsttest ohne GPU [Laptop]
 
 ```bash
 python3 -m unittest discover -s bench/tests -t .
@@ -153,6 +141,16 @@ Nur Modell oder nur Image: `--nur-modell` bzw. `--nur-image`.
 ## Teil 3 – Ein Messlauf auf RunPod
 
 Ab Schritt 3.2 kostet es Geld (2× RTX PRO 6000: ca. 3,30 $/h Community, ca. 5,40 $/h Secure).
+
+### 3.0 RunPod einmalig einrichten [Web] + [Laptop]
+
+1. **[Web]** RunPod-Konto anlegen, Firmenkarte hinterlegen und **ein Ausgabenlimit setzen**. Das Limit ist die einzige Kostenbremse über alle Läufe; die Skripte zeigen Kosten nur an.
+2. **[Web]** Unter **Settings → API Keys** einen Key nur für dieses Projekt anlegen und als `RUNPOD_API_KEY` in `benchmark.conf` eintragen.
+3. **[Laptop]** GPU-Typ ermitteln:
+   ```bash
+   python3 runpod/rp.py gpus
+   ```
+   **Was passiert:** Das Skript fragt bei der RunPod-API die GPU-Typen ab und zeigt die RTX PRO 6000. Die angezeigte `id` als `RUNPOD_GPU_ID` in `benchmark.conf` eintragen.
 
 ### 3.1 Probelauf [Laptop]
 
@@ -252,7 +250,7 @@ Als Pull Request einreichen. Die Rohdaten jeder Anfrage liegen in `results/raw/`
 
 ## Teil 4 – Andere GPU-Server
 
-Gleiches Startskript, aber ohne `rp.py`: Den Server startest du selbst, und die Testsuite misst gegen dessen Adresse.
+Gleiches Startskript, aber ohne `rp.py`: Den Server startest du selbst, und die Testsuite misst gegen dessen Adresse. Teil 3 und `rp.py` brauchst du dafür nicht. Auch hier gilt: **beim Anbieter ein Ausgabenlimit setzen** und im Teil 1.3 den vLLM-Key anlegen.
 
 | Weg | Wann | Hardware |
 |---|---|---|
