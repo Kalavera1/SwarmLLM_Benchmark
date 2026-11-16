@@ -12,7 +12,7 @@ Testprojekt: große Open-Weight-Modelle mit vLLM auf **2× NVIDIA RTX PRO 6000 B
 - **Realistische Last:** ca. 30 Nutzer, davon ca. 4 mit Vibe Coding (lange, wachsende Kontexte), der Rest Chat über OpenWebUI
 - **Bildverständnis:** Das Modell soll Bilder verarbeiten können (Screenshots, Diagramme)
 - **Agenten:** Das Modell soll als Arbeitsmodell für einen autonomen Agenten (Hermes Agent) taugen – zuverlässige Tool-Calls, mindestens 64k Kontext
-- **Kosten minimal:** GPU-Instanz läuft nur für Messläufe und wird danach sofort gelöscht. Budget für die erste Runde: 100 $
+- **Kosten minimal:** GPU-Instanz läuft nur für Messläufe und wird danach sofort gelöscht. Die Ausgabengrenze steht als Limit im RunPod-Konto
 
 ## Regeln
 
@@ -30,7 +30,7 @@ Testprojekt: große Open-Weight-Modelle mit vLLM auf **2× NVIDIA RTX PRO 6000 B
 ```mermaid
 flowchart LR
   subgraph ST["Steuerrechner – beliebig<br/>(Laptop, PC mit WSL, Server)"]
-    KO["benchmark.conf<br/>Zugangsdaten, Budget, Ziel"]
+    KO["benchmark.conf<br/>Zugangsdaten, Ziel"]
     BS["Testsuite bench/<br/>Profile, Ergebnisse"]
     RC["runpod/rp.py<br/>nur für RunPod"]
   end
@@ -59,7 +59,7 @@ flowchart LR
 
 | Weg | Start | Wofür |
 |---|---|---|
-| RunPod | `python3 runpod/rp.py up <profil>` (automatisch, mit Budget und Watchdog) | Modelle komplett im VRAM (Qwen, GLM) |
+| RunPod | `python3 runpod/rp.py up <profil>` (automatisch, mit Kostenanzeige und Watchdog) | Modelle komplett im VRAM (Qwen, GLM) |
 | Google Cloud G4 | VM anlegen, dann `server/lokal-starten.sh <profil>` | wenn die CPU zählt: AMD EPYC Turin wie der Zielserver |
 | Vast.ai | Image und Startskript per Oberfläche | CPU-Modell vor dem Mieten sichtbar |
 | Eigener Server | `server/lokal-starten.sh <profil>` | endgültige Messung auf der Zielhardware |
@@ -86,8 +86,8 @@ Reihenfolge = Testreihenfolge. Stand: Recherche vom 16.11.2026.
 | 0 | Qwen3.8-27B (Referenz, dense) | ja | vLLM (offizielles Recipe für RTX Pro 6000) | `nvidia/Qwen3.8-27B-NVFP4` | Phase 4: erster GPU-Test |
 | 1 | Qwen3.8-Flash-Next (125B + 51B N-gram, 6B aktiv) | ja | vLLM ≥ 0.30 (Nightly) | `Qwen/Qwen3.8-Flash-Next-FP8`, N-gram-Tabelle im Host-RAM | Phase 5 |
 | 2 | GLM-5.3-Flash (320B, 18B aktiv) | ja | vLLM-Container von Local Inference Lab | `nvidia/GLM-5.3-Flash-FP4-Local` (~166 GiB, von NVIDIA auf 2× RTX PRO 6000 validiert) | Phase 6 |
-| 2b | GLM-5.3-Flash | ja | Runtime von T.J. Purtell (`tpurtell/glm-5.3-flash-ext3-2x-rtx`), Profil `k3` | EXL3 K3 (~127 GiB) | optional, nur bei Restbudget |
-| 3 | DeepSeek V4 Flash (284B, 13B aktiv) | **nein** | Karmic Kraken (`ghcr.io/local-inference-lab/vllm`), SM120-Patches | `deepseek-ai/DeepSeek-V4-Flash-0731` | Phase 7, nur bei Restbudget |
+| 2b | GLM-5.3-Flash | ja | Runtime von T.J. Purtell (`tpurtell/glm-5.3-flash-ext3-2x-rtx`), Profil `k3` | EXL3 K3 (~127 GiB) | optional |
+| 3 | DeepSeek V4 Flash (284B, 13B aktiv) | **nein** | Karmic Kraken (`ghcr.io/local-inference-lab/vllm`), SM120-Patches | `deepseek-ai/DeepSeek-V4-Flash-0731` | optional, nach den anderen |
 
 **Passen nicht auf 2× 96 GB** (nur per API sinnvoll): GLM-5.3, Qwen3.5-397B. DeepSeek V4.1 Flash passt nur mit Auslagerung von Experten auf die CPU und der Engram-Tabellen auf die NVMe (siehe Entscheidungslog).
 

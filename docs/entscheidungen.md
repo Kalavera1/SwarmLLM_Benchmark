@@ -4,6 +4,18 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-16 – Keine Budgetgrenze im Skript; Ausgabenlimit im RunPod-Konto
+
+**Entscheidung:** `runpod/rp.py` bricht nicht mehr wegen eines Budgets ab; `RUNPOD_BUDGET_USD` entfällt. Das Skript zeigt vor dem Start weiter die geschätzten Kosten, fragt nach Bestätigung und verbucht jeden Pod in `results/kosten.csv` (`rp.py kosten` zeigt die Summe). Die Ausgabengrenze setzt ihr als Limit der hinterlegten Firmenkarte im RunPod-Konto.
+
+**Warum:** Ein Limit beim Anbieter gilt für alles, was über das Konto läuft – auch für Pods, die per Weboberfläche oder auf einem anderen Rechner gestartet werden. Eine Grenze im Skript würde nur Läufe vom selben Rechner sehen und doppelt pflegen, was das Konto ohnehin kann.
+
+## 2026-11-16 – pin.py holt Image-Digests direkt von der Registry
+
+**Entscheidung:** `profiles/pin.py` fragt Docker Hub bzw. ghcr.io direkt über die Registry-API (anonymes Lese-Token, Header `Docker-Content-Digest`); Docker ist nur noch Ersatzweg. Neu: `--trocken` zeigt an, was eingetragen würde, ohne das Profil zu ändern.
+
+**Warum:** Der Steuerrechner (Laptop) hat nicht unbedingt Docker. Angefragt wird der Multi-Arch-Index, damit derselbe Digest herauskommt wie bei `docker buildx imagetools inspect`.
+
 ## 2026-11-16 – Kein fester Mediaserver mehr: beliebiger Steuerrechner, Chat-Stack optional
 
 **Entscheidung:**

@@ -2,7 +2,7 @@
 
 Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder Phase die [Erfahrungen](erfahrungen.md) durchsehen.
 
-Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,28 $/h (Stand 15.11.2026). Budget der ersten Runde: 100 $.
+Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,28 $/h (Stand 15.11.2026). Die Ausgabengrenze setzt ihr als Limit im RunPod-Konto.
 
 | Phase | Ziel | Kosten (geschätzt) | Status |
 |---|---|---|---|
@@ -15,7 +15,7 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 | 5 | Qwen3.8-Flash-Next | 3–5 h ≈ 10–16 $ | offen |
 | 6 | GLM-5.3-Flash | 3–5 h ≈ 10–16 $ | offen |
 | 7 | DeepSeek V4.1 Flash (wichtigstes Modell) | Weg A: 0 € (eigener Server) bzw. RunPod je nach Host; Weg B: 3–4 h × 6,56 $/h ≈ 20–26 $ | Weg offen |
-| 7b | Optional: DeepSeek V4 Flash, GLM über Purtell-Runtime | je 3–5 h | nur bei Restbudget |
+| 7b | Optional: DeepSeek V4 Flash, GLM über Purtell-Runtime | je 3–5 h | optional |
 | 8 | Auswertung | 0 € | offen |
 
 ---
@@ -76,7 +76,7 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 - `server/start-im-container.sh`: ein Startskript für alle GPU-Server (RunPod, Cloud-VM, Vast.ai, eigener Server) mit Host-Check (P2P, CPU, RAM-Bandbreite, Power-Limit); `server/lokal-starten.sh` für Rechner mit Docker.
 - `benchmark.conf` für alle eigenen Werte und `ANLEITUNG.md` für den Ablauf von einem beliebigen Steuerrechner aus.
 - `runpod/` für die REST-API v2: GPU-Typen anzeigen, Pod anlegen, prüfen, Status, löschen. Ohne Network Volume: Der Pod lädt die gepinnte Revision beim Start selbst.
-- Budgetgrenze: Vor jedem Start Kostenschätzung und Abbruch, wenn das Restbudget nicht reicht. Jeder Pod wird mit tatsächlichen Kosten in `results/kosten.csv` verbucht.
+- Vor jedem Start Kostenschätzung und Bestätigung. Jeder Pod wird mit tatsächlichen Kosten in `results/kosten.csv` verbucht. Die Ausgabengrenze steht im RunPod-Konto (Kartenlimit).
 - Watchdog auf dem Steuerrechner, der den Pod nach `POD_MAX_MINUTES` terminiert.
 - `profiles/` mit einem Ordner pro Modell: Startparameter, Fähigkeiten (Bilder, Tool-Parser, Denkstufen), Pin-Skript für Image-Digest und Modell-Revision.
 
@@ -123,7 +123,7 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 ## Phase 7b – Optional: DeepSeek V4 Flash, GLM über Purtell-Runtime
 
-Nur wenn nach Phase 7 noch Budget übrig ist. DeepSeek V4 Flash kann keine Bilder; die Purtell-Runtime ist kein Upstream-vLLM.
+Optional, nach Phase 7. DeepSeek V4 Flash kann keine Bilder; die Purtell-Runtime ist kein Upstream-vLLM.
 
 ## Phase 8 – Auswertung
 
