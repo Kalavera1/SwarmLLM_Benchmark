@@ -4,6 +4,21 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-16 – Zielhardware bestätigt: EPYC 9745 und 2× RTX PRO 6000 Max-Q
+
+**Befund (Angabe des Nutzers):** Zielserver (Lenovo ThinkSystem) mit
+- 1× AMD EPYC 9745: 128 Kerne, 400 W, 2,4 GHz – Generation Zen 5c („Turin Dense“), 12 Speicherkanäle DDR5, laut Händlerangabe bis 576 GB/s
+- 2× RTX PRO 6000 Blackwell **Max-Q Workstation Edition**, je 96 GB, 300 W, PCIe Gen5
+
+Damit ist der Hinweis des Kollegen „EPYC 8004“ überholt: Der Zielserver hat einen EPYC 9005, keinen 8004. Die Richtung stimmt trotzdem – DDR5 und viele Speicherkanäle sind für DeepSeek V4.1 Flash mit CPU-Experten entscheidend.
+
+**Folgen:**
+- **RAM-Ausbau:** Für DeepSeek V4.1 Flash ≈ 250 GB nötig. Damit die volle Bandbreite ankommt, sollten **alle 12 Kanäle bestückt** sein (z. B. 12 × 32 GB = 384 GB). Mit weniger Modulen sinkt die Bandbreite – und damit das Tempo bei CPU-Auslagerung – fast proportional.
+- **Cloud-Ersatz:** Vast.ai bietet 2× RTX PRO 6000 **Max-Q** an (Screenshot des Nutzers, 16.11.2026: 2,80–5,47 $/h für beide Karten), aber nur mit älteren CPUs (EPYC 7742/7453/7B13 mit DDR4 und PCIe 4, oder Xeon). Für Qwen und GLM (komplett im VRAM) passt das: Die Karten sind dieselben. Für DeepSeek V4.1 Flash mit CPU-Experten ist keiner davon repräsentativ.
+- Der Host-Check misst die **RAM-Bandbreite**, damit Cloud-Ergebnisse auf den Zielserver umgerechnet werden können.
+
+**Quellen:** Angaben des Nutzers; [EPYC 9745: 12 Kanäle DDR5, 576 GB/s (Händlerangabe)](https://aio.lv/en/product--amd-100-000001460--11379842.md), [AMD-Produktseite EPYC 9745](https://www.amd.com/en/products/processors/server/epyc/9005-series/amd-epyc-9745.html)
+
 ## 2026-11-16 – Zielhardware ist Max-Q (300 W); Skripte anbieterunabhängig
 
 **Befund:** Der eigene Server zeigt bei `nvidia-smi` ein Power-Limit von **300 W** – das spricht für die RTX PRO 6000 **Max-Q** Workstation Edition (Bestätigung mit `nvidia-smi --query-gpu=name,power.limit --format=csv` steht aus). Server- und Workstation-Edition in der Cloud laufen mit 600 W. Treiber 615.71.09 – derselbe, mit dem das DeepSeek-V4.1-Rezept getestet wurde.
