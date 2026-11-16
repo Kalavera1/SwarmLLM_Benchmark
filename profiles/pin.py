@@ -8,7 +8,7 @@ und schreibt zurück:
   MODEL_ID, MODEL_REVISION (voller Commit-Hash), MODELL_GROESSE_GB
   VLLM_IMAGE (Image per @sha256-Digest)
 
-Läuft auf dem Mediaserver (braucht Internet und für das Image Docker).
+Läuft auf dem Steuerrechner (braucht Internet und für das Image Docker).
 Aufruf: python3 profiles/pin.py <profil> [--nur-modell | --nur-image]
 
 Erst nach dem Pinnen lassen sich Profile starten; die CI prüft, dass MODEL_ID

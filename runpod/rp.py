@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """RunPod-Steuerung über die REST-API v2: Pod anlegen, prüfen, löschen – mit Budget.
 
-Befehle (alle vom Mediaserver aus, im Repo-Ordner):
+Befehle (alle vom Steuerrechner aus, im Repo-Ordner):
   python3 runpod/rp.py gpus                      GPU-Typen aus dem Katalog (ID für RUNPOD_GPU_ID)
   python3 runpod/rp.py budget                    verbraucht / Budget / Rest
   python3 runpod/rp.py up <profil> [--stufe schnell|voll] [--minuten N] [--cloud COMMUNITY|SECURE] [--trocken]
@@ -166,7 +166,8 @@ def starte_watchdog(pod_id: str, minuten: int) -> str:
             cwd=REPO,
         )
     return (
-        f"Hintergrundprozess (nohup-Ersatz), Log: {log.relative_to(REPO)} – überlebt keinen Neustart des Mediaservers!"
+        f"Hintergrundprozess (nohup-Ersatz), Log: {log.relative_to(REPO)} – "
+        "überlebt keinen Neustart oder Ruhezustand des Steuerrechners!"
     )
 
 

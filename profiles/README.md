@@ -12,7 +12,7 @@ Ein Ordner pro Modell mit `profile.env`. Das Profil ist die einzige Stelle, an d
 
 ## Pinnen (Regel 4)
 
-Profile nennen nur die Quelle (`MODEL_QUELLE`, `VLLM_IMAGE_QUELLE`). Gestartet wird erst nach dem Pinnen – auf dem Mediaserver, weil dort Internet und Docker sind:
+Profile nennen nur die Quelle (`MODEL_QUELLE`, `VLLM_IMAGE_QUELLE`). Gestartet wird erst nach dem Pinnen – auf dem Steuerrechner (braucht Internet; für den Image-Digest Docker oder die Alternative in der [ANLEITUNG](../ANLEITUNG.md#3-modell-pinnen-einmal-pro-modell)):
 
 ```bash
 python3 profiles/pin.py qwen38-27b        # trägt MODEL_ID, MODEL_REVISION, MODELL_GROESSE_GB, VLLM_IMAGE ein

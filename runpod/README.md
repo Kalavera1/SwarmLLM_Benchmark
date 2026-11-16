@@ -11,7 +11,7 @@ Das Startskript im Container prüft zuerst den Host (GPUs mit Power-Limit, P2P m
 
 ## RunPod: einmalig einrichten
 
-In `.env` (Vorlage: `.env.example`):
+In `benchmark.conf` (Vorlage: `benchmark.conf.example`):
 
 ```bash
 RUNPOD_API_KEY=…            # nur für dieses Projekt angelegt
@@ -23,7 +23,7 @@ POD_MAX_MINUTES=90          # Watchdog
 Dann die GPU-ID aus dem Katalog holen und eintragen:
 
 ```bash
-python3 runpod/rp.py gpus          # 'id' der RTX PRO 6000 als RUNPOD_GPU_ID in .env
+python3 runpod/rp.py gpus          # 'id' der RTX PRO 6000 als RUNPOD_GPU_ID in benchmark.conf
 loginctl enable-linger "$USER"     # damit der Watchdog-Timer auch ohne Anmeldung läuft
 ```
 
@@ -51,11 +51,11 @@ Auf einem Server mit Docker und NVIDIA Container Toolkit, im Repo-Ordner:
 
 ```bash
 python3 profiles/pin.py qwen38-27b
-server/lokal-starten.sh qwen38-27b                 # VLLM_API_KEY muss in .env stehen
+server/lokal-starten.sh qwen38-27b                 # VLLM_API_KEY muss in benchmark.conf stehen
 docker logs -f swarmllm-qwen38-27b                 # oder http://<server>:8001/status.json
 ```
 
-Gemessen wird vom Mediaserver aus mit `BENCH_ZIEL_URL=http://<server>:8000/v1` und demselben `VLLM_API_KEY` in dessen `.env`.
+Gemessen wird vom Steuerrechner aus mit `BENCH_ZIEL_URL=http://<server>:8000/v1` und demselben `VLLM_API_KEY` in dessen `benchmark.conf`.
 
 Bei **Vast.ai** läuft kein `docker run` auf dem Host; dort das gepinnte vLLM-Image als Image wählen, die Profilwerte als Umgebungsvariablen setzen und als Startbefehl dasselbe Startskript verwenden. Vorteil von Vast.ai: Das CPU-Modell des Hosts ist vor dem Mieten sichtbar.
 

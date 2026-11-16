@@ -73,7 +73,7 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 **Ergebnis:**
 - `runpod/` für die REST-API v2: GPU-Typen anzeigen, Pod anlegen, prüfen, Status, löschen. Ohne Network Volume: Der Pod lädt die gepinnte Revision beim Start selbst.
 - Budgetgrenze: Vor jedem Start Kostenschätzung und Abbruch, wenn das Restbudget nicht reicht. Jeder Pod wird mit tatsächlichen Kosten in `results/kosten.csv` verbucht.
-- Watchdog auf dem Mediaserver, der den Pod nach `POD_MAX_MINUTES` terminiert.
+- Watchdog auf dem Steuerrechner, der den Pod nach `POD_MAX_MINUTES` terminiert.
 - `profiles/` mit einem Ordner pro Modell: Startparameter, Fähigkeiten (Bilder, Tool-Parser, Denkstufen), Pin-Skript für Image-Digest und Modell-Revision.
 
 **Fertig, wenn:** Skripte und Profile reviewt sind und ein Trockenlauf (`--trocken`) den API-Aufruf korrekt zeigt, ohne einen Pod anzulegen.
