@@ -9,10 +9,11 @@
 # Anleitung: ANLEITUNG.md
 
 # ---------------------------------------------------------------------------
-# 1. Zugangsschutz für vLLM (Pflicht, Regel 8)
-#    Ein Key, den du selbst erzeugst:  openssl rand -hex 24
-#    Bei RunPod erzeugt rp.py pro Pod automatisch einen eigenen Key; dieser Wert
-#    gilt dann für eigene Server und Google Cloud.
+# 1. Zugangsschutz für vLLM (Regel 8)
+#    RunPod mit rp.py: leer lassen – rp.py erzeugt pro Pod einen eigenen Key.
+#    Vast.ai, Google Cloud, eigener Server: PFLICHT. Erzeugen und eintragen mit
+#      sed -i "s/^VLLM_API_KEY=.*/VLLM_API_KEY=$(openssl rand -hex 24)/" benchmark.conf
+#    Derselbe Wert muss auch in der benchmark.conf des GPU-Servers stehen.
 # ---------------------------------------------------------------------------
 VLLM_API_KEY=
 
@@ -52,7 +53,9 @@ RUNPOD_CLOUD=COMMUNITY
 POD_MAX_MINUTES=
 
 # ---------------------------------------------------------------------------
-# 6. Optional: LiteLLM-Gateway (nur wenn über --ueber-gateway gemessen wird)
+# 6. Optional: LiteLLM-Gateway (chat-stack/, oder Messung mit --ueber-gateway)
+#    Master-Key muss mit sk- beginnen. Für den späteren Betrieb kommen
+#    LITELLM_SALT_KEY und eine Datenbank für virtuelle Keys dazu (ANLEITUNG 1.3).
 # ---------------------------------------------------------------------------
 LITELLM_URL=
 LITELLM_MASTER_KEY=
