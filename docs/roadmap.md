@@ -14,9 +14,10 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 | 4 | Erster GPU-Test mit Qwen3.8-27B | ca. 1 h ≈ 4 $ | offen |
 | 5 | Qwen3.8-Flash-Next | 3–5 h ≈ 10–16 $ | offen |
 | 6 | GLM-5.3-Flash | 3–5 h ≈ 10–16 $ | offen |
-| 7 | DeepSeek V4.1 Flash (wichtigstes Modell) | Weg A: 0 € (eigener Server) bzw. RunPod je nach Host; Weg B: 3–4 h × 6,56 $/h ≈ 20–26 $ | Weg offen |
-| 7b | Optional: DeepSeek V4 Flash, GLM über Purtell-Runtime | je 3–5 h | optional |
-| 8 | Auswertung | 0 € | offen |
+| 7 | DeepSeek V4.1 Flash (Rang 2) | Google Cloud G4 ≈ 4,10–4,60 $/h Spot, eigener Server 0 € | Host offen |
+| 8 | GLM-5.3 Q3 (Rang 1, wichtigstes Modell) | wie Phase 7 | Runtime und Host offen |
+| 9 | Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime | je 3–5 h | optional |
+| 10 | Auswertung | 0 € | offen |
 
 ---
 
@@ -117,14 +118,25 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 ## Phase 7 – DeepSeek V4.1 Flash
 
-**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`, mit 500k Kontext als Pflichtpunkt. Weg A (2 Karten, CPU-Experten) oder Weg B (4 Karten, Karmic Kraken) – siehe [Entscheidungslog](entscheidungen.md). Bei Weg A zusätzlich festhalten: CPU, RAM und NVMe des Hosts, weil das Tempo davon abhängt.
+**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`, mit 500k Kontext als Pflichtpunkt. Nur 2 Karten, Experten teils auf der CPU (Rezept theogravity). Zusätzlich festhalten: CPU, RAM-Bandbreite und NVMe des Hosts, weil das Tempo davon abhängt. Host: Google Cloud G4 (EPYC Turin) oder eigener Server.
 
 **Fertig, wenn:** Ergebnisse und Zusammenfassung in `results/`.
 
-## Phase 7b – Optional: DeepSeek V4 Flash, GLM über Purtell-Runtime
+## Phase 8 – GLM-5.3 Q3 (wichtigstes Modell)
 
-Optional, nach Phase 7. DeepSeek V4 Flash kann keine Bilder; die Purtell-Runtime ist kein Upstream-vLLM.
+**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`. GLM-5.3 in Q3 (≈ 343 GB) passt nicht in 2× 96 GB; ein Teil der Experten läuft auf der CPU.
 
-## Phase 8 – Auswertung
+**Vorher zu klären:**
+- **Runtime:** llama.cpp (erprobt, aber langsames Einlesen: ≈ 83 tok/s mit 2-Bit auf 2× RTX PRO 6000) oder KTransformers/SGLang (liest auf der GPU ein, für GLM-5 dokumentiert, für GLM-5.3 auf 2 Karten noch ohne Messung). Beide sind kein vLLM – das Startskript braucht dafür einen eigenen Startweg.
+- **Bildfähigkeit** von GLM-5.3 prüfen.
+- **Host** mit ≥ 384 GB RAM: Google Cloud G4 (360 GB) ist dafür knapp; eigener Server mit voll bestückten 12 Kanälen.
+
+**Wichtig:** 500k Kontext ist hier das größte Risiko. Mit llama.cpp-Tempo dauert ein 500k-Prompt über eine Stunde.
+
+## Phase 9 – Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime
+
+Optional, nach Phase 8. DeepSeek V4 Flash kann keine Bilder; die Purtell-Runtime ist kein Upstream-vLLM.
+
+## Phase 10 – Auswertung
 
 **Ergebnis:** Vergleichstabelle (`python3 -m bench auswertung`), Kosten pro Lauf, Empfehlung, ob und welches Modell für den produktiven Einsatz taugt. Als Referenz dient der B300-Test vom 01.10.2026 (1 Karte, ca. 8 $/h, deutlich schnellerer Prefill).
