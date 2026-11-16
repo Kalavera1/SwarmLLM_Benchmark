@@ -15,16 +15,21 @@ useDefault = true
 # Regel am Variablennamen an.
 #
 #   regex        Gruppe 1 = Variablenname, Gruppe 2 = Wert. Der Wert muss
-#                mindestens 12 Zeichen haben und darf kein Leerzeichen,
-#                Anführungszeichen, # (Kommentar) oder $ (Verweis) enthalten.
+#                mindestens 12 Zeichen lang sein und darf nur aus Zeichen
+#                bestehen, die in echten Keys vorkommen: Buchstaben, Ziffern
+#                und _ - + / = . (Hex, Base64, Tokens wie sk-… oder hf_…).
+#                Damit zählen Verweise (${VAR}), Kommentare (#) und
+#                Befehlsmuster wie in sed "s|…=.*|…=sk-$(…)|" nicht als Wert.
 #                [ \t]* statt \s*, damit die Regex nicht in die nächste Zeile
 #                weiterliest.
 #   secretGroup  welche Gruppe das eigentliche Secret ist (wird geschwärzt)
 #   keywords     Vorfilter: Regex läuft nur auf Zeilen mit einem dieser Wörter
+#
+# Selbsttest der Regel: ci/test_gitleaks_regel.sh (läuft in der CI vor dem Scan)
 # ---------------------------------------------------------------------------
 [[rules]]
 id = "projekt-zugangsdaten"
 description = "Wert für eine Zugangsdaten-Variable dieses Projekts"
-regex = '''(?i)\b(RUNPOD_API_KEY|VLLM_API_KEY|LITELLM_MASTER_KEY|HF_TOKEN)[ \t]*[:=][ \t]*["']?([^\s"'#$]{12,})'''
+regex = '''(?i)\b(RUNPOD_API_KEY|VLLM_API_KEY|LITELLM_MASTER_KEY|HF_TOKEN)[ \t]*[:=][ \t]*["']?([A-Za-z0-9_+/=.-]{12,})'''
 secretGroup = 2
 keywords = ["runpod_api_key", "vllm_api_key", "litellm_master_key", "hf_token"]
