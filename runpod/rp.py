@@ -42,7 +42,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from bench.konfig import ENV_DATEI, POD_DATEI, lade_profil, lies_env_datei  # noqa: E402
+from bench.konfig import POD_DATEI, lade_profil, lies_einstellungen  # noqa: E402
 
 API = os.environ.get("RUNPOD_API_URL", "https://api.runpod.io/v2")
 USER_AGENT = "SwarmLLM_Benchmark-runpod/1.0"
@@ -57,10 +57,10 @@ STANDARD_MINUTEN = {"schnell": 90, "voll": 210}
 
 
 # ---------------------------------------------------------------------------
-# Einstellungen aus .env (nie im Repo)
+# Einstellungen aus benchmark.conf bzw. .env (nie im Repo)
 # ---------------------------------------------------------------------------
 def einstellung(name: str, standard: str = "") -> str:
-    return os.environ.get(name) or lies_env_datei(ENV_DATEI).get(name) or standard
+    return os.environ.get(name) or lies_einstellungen().get(name) or standard
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ def einstellung(name: str, standard: str = "") -> str:
 def api(methode: str, pfad: str, daten: dict | None = None) -> dict | list:
     key = einstellung("RUNPOD_API_KEY")
     if not key:
-        raise SystemExit("FEHLER: RUNPOD_API_KEY fehlt in .env.")
+        raise SystemExit("FEHLER: RUNPOD_API_KEY fehlt in benchmark.conf.")
     anfrage = urllib.request.Request(  # noqa: S310 (feste https-URL)
         API + pfad,
         method=methode,
@@ -198,7 +198,7 @@ def befehl_gpus(_args) -> int:
     treffer = [g for g in eintraege if "6000" in json.dumps(g)] or eintraege
     for g in treffer:
         print(json.dumps(g, ensure_ascii=False))
-    print("\nDie passende 'id' als RUNPOD_GPU_ID in .env eintragen.")
+    print("\nDie passende 'id' als RUNPOD_GPU_ID in benchmark.conf eintragen.")
     return 0
 
 
@@ -213,7 +213,7 @@ def befehl_up(args) -> int:
     probleme = pruefe_profil(profil)
     gpu_id = einstellung("RUNPOD_GPU_ID")
     if not gpu_id:
-        probleme.append("RUNPOD_GPU_ID fehlt in .env (python3 runpod/rp.py gpus)")
+        probleme.append("RUNPOD_GPU_ID fehlt in benchmark.conf (python3 runpod/rp.py gpus)")
     if POD_DATEI.is_file() and not args.trocken:
         probleme.append("Es läuft schon ein Pod (runpod/.aktueller-pod.json). Erst: python3 runpod/rp.py down")
 

@@ -49,3 +49,6 @@ local/data/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Eigene Werte und Zugangsdaten (Vorlage: benchmark.conf.example)
+benchmark.conf
