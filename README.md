@@ -91,7 +91,8 @@ Ordner entstehen erst in der Phase, in der sie gebraucht werden.
 │   └── erfahrungen.md  Lehren aus früheren Tests
 ├── local/              Phase 1: Swarm-Stack mit LiteLLM + Mock-Server (Anleitung: local/README.md)
 ├── bench/              Phase 2: Testsuite (V-Modell), blockweise startbar
-├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen
+├── runpod/             Phase 3–4: Pod anlegen, prüfen, löschen (Anleitung: runpod/README.md)
+├── server/             Startskript im Container, docker run für eigenen Server
 ├── profiles/           Phase 4+: ein Ordner pro Modell
 └── results/            Messergebnisse (JSON + Zusammenfassung)
 ```
