@@ -1,5 +1,7 @@
 # Mediaserver: Umzug von Snap-Docker auf docker-ce
 
+> **Stand 16.11.2026:** Für die Messungen ist der Mediaserver nicht mehr nötig (siehe [Entscheidungslog](../entscheidungen.md)). Diese Anleitung gilt nur noch, wenn dort der optionale Chat-Stack (`chat-stack/`) oder ein anderer Docker-Dienst laufen soll.
+
 Einmalige Anleitung für den Mediaserver (Ubuntu 24.04.5, Kernel 6.14). Ausführen von Hand, Schritt für Schritt. Bei jeder unerwarteten Ausgabe **stoppen** und die Ausgabe prüfen lassen.
 
 ## Warum

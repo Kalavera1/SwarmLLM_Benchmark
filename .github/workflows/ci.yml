@@ -43,6 +43,10 @@ jobs:
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
+      # Selbsttest: prüft die Projektregel mit künstlichen Fällen (echte Werte
+      # müssen erkannt werden, legitime Muster dürfen keinen Fehlalarm geben)
+      - name: Selbsttest der Projektregel
+        run: GITLEAKS=./gitleaks bash ci/test_gitleaks_regel.sh
       - name: Alle Commits aller Branches dieses Repos scannen
         # --config ausdrücklich: Fehlt die Datei, bricht gitleaks ab, statt still
         # ohne die Projektregel weiterzuprüfen.
@@ -64,7 +68,21 @@ jobs:
         run: python3 ci/check_pins.py
 
   # -------------------------------------------------------------------------
-  # Job 3 – Linter
+  # Job 3 – Testsuite (Phase 2)
+  # Unit-Tests der Bausteine und ein Lauf gegen den Mock-Server. Braucht
+  # weder GPU noch Zugangsdaten; der Mock startet im Test selbst.
+  # -------------------------------------------------------------------------
+  bench:
+    name: Testsuite (Unit und Mock)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # -t . = Repo-Wurzel als Startpunkt, damit "import bench" funktioniert
+      - name: Unit- und Mock-Tests
+        run: python3 -m unittest discover -s bench/tests -t . -v
+
+  # -------------------------------------------------------------------------
+  # Job 4 – Linter
   # ruff prüft Python (Regeln in ruff.toml), shellcheck prüft Bash-Skripte.
   # -------------------------------------------------------------------------
   lint:

@@ -1,6 +1,8 @@
-# Phase 1: LiteLLM und Mock-Server im Swarm
+# Optional: Chat-Zugang mit LiteLLM und OpenWebUI (Docker Swarm)
 
-Läuft auf dem **Mediaserver** neben der bestehenden OpenWebUI (Port 8081). Noch keine GPU: LiteLLM leitet an einen Mock-Server weiter, der die OpenAI-API von vLLM nachahmt.
+**Für die Messungen nicht nötig** – die Testsuite misst direkt gegen vLLM, und den Mock startet sie selbst. Dieser Stack ist dafür da, ein Modell während eines Laufs im Chat auszuprobieren, und als Vorlage für den späteren Betrieb mit OpenWebUI auf dem Zielserver.
+
+Läuft auf einem beliebigen Linux-Rechner mit Docker, neben einer OpenWebUI (hier Port 8081). Noch keine GPU: LiteLLM leitet an einen Mock-Server weiter, der die OpenAI-API von vLLM nachahmt.
 
 ```mermaid
 flowchart LR
@@ -25,7 +27,7 @@ flowchart LR
 
 LiteLLM und Mock nutzen dasselbe Image, weil es Python mitbringt. So muss nur ein Image gepinnt werden.
 
-## Einrichtung (einmalig, auf dem Mediaserver)
+## Einrichtung (einmalig, auf dem Docker-Rechner)
 
 **1. Repo holen**
 
@@ -37,17 +39,19 @@ cd ~/projekte/SwarmLLM_Benchmark
 **2. Zugangsdaten anlegen**
 
 ```bash
-cp .env.example .env
-chmod 600 .env
-echo "LITELLM_MASTER_KEY=sk-$(openssl rand -hex 24)"   # Ausgabe in .env eintragen
+cp benchmark.conf.example benchmark.conf    # falls noch nicht vorhanden
+chmod 600 benchmark.conf
+# Die Vorlage enthält die Zeile LITELLM_MASTER_KEY= schon leer – Wert dort einsetzen:
+sed -i "s|^LITELLM_MASTER_KEY=.*|LITELLM_MASTER_KEY=sk-$(openssl rand -hex 24)|" benchmark.conf
+grep -c '^LITELLM_MASTER_KEY=' benchmark.conf    # Kontrolle: muss 1 ausgeben
 ```
 
-Den Master-Key brauchst du gleich noch einmal für OpenWebUI.
+Den Master-Key brauchst du gleich noch einmal für OpenWebUI (`grep LITELLM_MASTER_KEY benchmark.conf`).
 
 **3. Swarm einschalten**
 
 ```bash
-docker swarm init --advertise-addr <LAN-IP des Mediaservers>
+docker swarm init --advertise-addr <LAN-IP des Docker-Rechners>
 ```
 
 Die laufenden Compose-Container, auch die OpenWebUI, merken davon nichts.
@@ -67,7 +71,7 @@ Schreibt den Digest in `images.env`. Bitte die Zeile `LITELLM_IMAGE=…` an Clau
 ./deploy.sh
 ```
 
-Beim ersten Mal legt das Skript die Secrets an: `litellm_master_key` aus der `.env`, `mock_api_key` zufällig. Dann wartet es, bis beide Services gesund sind.
+Beim ersten Mal legt das Skript die Secrets an: `litellm_master_key` aus der `benchmark.conf`, `mock_api_key` zufällig. Dann wartet es, bis beide Services gesund sind.
 
 **6. Testen**
 
@@ -82,14 +86,14 @@ Erwartet: `Alle Prüfungen bestanden.`
 In der OpenWebUI auf Port 8081:
 
 1. **Admin-Einstellungen → Verbindungen → OpenAI API** → Verbindung hinzufügen
-2. **URL:** `http://<LAN-IP des Mediaservers>:4000/v1`
+2. **URL:** `http://<LAN-IP des Docker-Rechners>:4000/v1`
    - nicht `localhost`, denn aus dem OpenWebUI-Container wäre das der Container selbst
-3. **Key:** der `LITELLM_MASTER_KEY` aus der `.env`
+3. **Key:** der `LITELLM_MASTER_KEY` aus der `benchmark.conf`
 4. Speichern. In der Modellauswahl erscheint `mock`.
 
-Ein Chat mit `mock` liefert eine feste Antwort („Das ist eine Antwort des Mock-Servers …“). Damit ist die Kette OpenWebUI → LiteLLM → Ziel bewiesen. Ab Phase 4 kommt in der `config.yaml` nur ein weiteres Ziel dazu, an OpenWebUI ändert sich nichts.
+Ein Chat mit `mock` liefert eine feste Antwort („Das ist eine Antwort des Mock-Servers …“). Damit ist die Kette OpenWebUI → LiteLLM → Ziel bewiesen. Für einen echten Lauf kommt in der `config.yaml` nur ein weiteres Ziel dazu, an OpenWebUI ändert sich nichts.
 
-**Kommt keine Verbindung zustande?** Dann blockiert vermutlich die Firewall des Mediaservers Port 4000 aus dem Docker-Netz. Prüfen mit `curl http://<LAN-IP>:4000/health/liveliness` vom Host und aus dem Container (`docker exec openwebui curl …`).
+**Kommt keine Verbindung zustande?** Dann blockiert vermutlich die Firewall des Docker-Rechners Port 4000 aus dem Docker-Netz. Prüfen mit `curl http://<LAN-IP>:4000/health/liveliness` vom Host und aus dem Container (`docker exec openwebui curl …`).
 
 ## Betrieb
 

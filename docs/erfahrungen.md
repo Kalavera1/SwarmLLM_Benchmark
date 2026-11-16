@@ -36,6 +36,8 @@ Lokal ohne Docker getestet: LiteLLM aus PyPI (gleiche Version wie das Image), Mo
 
 ## Test vom 01.10.2026: GLM-5.3-Flash auf 1× B300 (Repo `benchmark_GLM53_runpod`)
 
+Bericht, Rohdaten und Original-Doku liegen versioniert im Archiv: [`archiv/2026-10-01_glm53-flash_b300/`](../archiv/2026-10-01_glm53-flash_b300/STECKBRIEF.md) (Messreihe v0).
+
 **Aufbau:** 1× NVIDIA B300 (288 GB) bei RunPod, 7,96 $/h. Image `vllm/vllm-openai:nightly` (vLLM 0.30.1rc1), Checkpoint `nvidia/GLM-5.3-Flash-NVFP4`, FP8-KV-Cache, 1M Kontext, `--max-num-seqs 4`. OpenWebUI direkt über den RunPod-HTTP-Proxy angebunden, ohne LiteLLM.
 
 ### Messwerte als Referenz

@@ -1,0 +1,83 @@
+{
+  "zeit": "2026-10-01 18:43",
+  "modell": "glm-5.3-flash",
+  "tempo": [
+    {
+      "ttft_s": 1.03,
+      "dauer_s": 11.58,
+      "prompt_tokens": 39,
+      "completion_tokens": 1500,
+      "tok_s": 142.1
+    },
+    {
+      "ttft_s": 0.32,
+      "dauer_s": 10.82,
+      "prompt_tokens": 32,
+      "completion_tokens": 1500,
+      "tok_s": 142.8
+    },
+    {
+      "ttft_s": 0.28,
+      "dauer_s": 31.47,
+      "prompt_tokens": 39,
+      "completion_tokens": 1500,
+      "tok_s": 48.1
+    }
+  ],
+  "parallel": [
+    {
+      "n": 2,
+      "gesamt_tok_s": 187.9,
+      "je_nutzer": [
+        108.1,
+        108.1
+      ]
+    },
+    {
+      "n": 4,
+      "gesamt_tok_s": 231.2,
+      "je_nutzer": [
+        109.5,
+        111.2,
+        128.9,
+        111.2
+      ]
+    }
+  ],
+  "tools": {
+    "treffer": 10,
+    "gesamt": 10
+  },
+  "kontext": [
+    {
+      "prompt_tokens": 31156,
+      "ttft_s": 1.66,
+      "prefill_tok_s": 18769,
+      "nadel_gefunden": true
+    },
+    {
+      "prompt_tokens": 124563,
+      "ttft_s": 4.57,
+      "prefill_tok_s": 27257,
+      "nadel_gefunden": true
+    },
+    {
+      "prompt_tokens": 249076,
+      "ttft_s": 8.96,
+      "prefill_tok_s": 27799,
+      "nadel_gefunden": true
+    },
+    {
+      "prompt_tokens": 498100,
+      "ttft_s": 17.59,
+      "prefill_tok_s": 28317,
+      "nadel_gefunden": true
+    },
+    {
+      "prompt_tokens": 950020,
+      "ttft_s": 37.45,
+      "prefill_tok_s": 25368,
+      "nadel_gefunden": true
+    }
+  ]
+}

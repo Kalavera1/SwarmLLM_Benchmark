@@ -1,0 +1,52 @@
+{
+  "zeit": "2026-10-01 18:46",
+  "modell": "gemma4:12b",
+  "tempo": [
+    {
+      "ttft_s": 16.74,
+      "dauer_s": 48.39,
+      "prompt_tokens": 42,
+      "completion_tokens": 1500,
+      "tok_s": 47.4
+    },
+    {
+      "ttft_s": 0.78,
+      "dauer_s": 32.3,
+      "prompt_tokens": 33,
+      "completion_tokens": 1500,
+      "tok_s": 47.6
+    },
+    {
+      "ttft_s": 0.81,
+      "dauer_s": 32.34,
+      "prompt_tokens": 43,
+      "completion_tokens": 1500,
+      "tok_s": 47.6
+    }
+  ],
+  "parallel": [
+    {
+      "n": 2,
+      "gesamt_tok_s": 46.2,
+      "je_nutzer": [
+        47.9,
+        48.0
+      ]
+    },
+    {
+      "n": 4,
+      "gesamt_tok_s": 46.3,
+      "je_nutzer": [
+        48.2,
+        48.0,
+        48.2,
+        48.0
+      ]
+    }
+  ],
+  "tools": {
+    "treffer": 10,
+    "gesamt": 10
+  },
+  "kontext": []
+}

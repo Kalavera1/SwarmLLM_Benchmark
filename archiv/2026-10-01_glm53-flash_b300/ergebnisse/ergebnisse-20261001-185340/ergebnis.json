@@ -1,0 +1,499 @@
+{
+  "zeit": "2026-10-01 18:53",
+  "last": [
+    {
+      "nutzer": 1,
+      "fehler": 0,
+      "ttft_p50": 0.48,
+      "ttft_p95": 0.48,
+      "tok_s_p50": 142.9,
+      "tok_s_min": 142.9,
+      "gesamt_tok_s": 131.5,
+      "dauer_max_s": 6.1,
+      "einzeln": [
+        {
+          "ttft_s": 0.48,
+          "dauer_s": 6.08,
+          "prompt_tokens": 37,
+          "completion_tokens": 800,
+          "tok_s": 142.9
+        }
+      ]
+    },
+    {
+      "nutzer": 2,
+      "fehler": 0,
+      "ttft_p50": 0.52,
+      "ttft_p95": 0.52,
+      "tok_s_p50": 129.15,
+      "tok_s_min": 129.1,
+      "gesamt_tok_s": 238.1,
+      "dauer_max_s": 6.7,
+      "einzeln": [
+        {
+          "ttft_s": 0.52,
+          "dauer_s": 6.72,
+          "prompt_tokens": 37,
+          "completion_tokens": 800,
+          "tok_s": 129.1
+        },
+        {
+          "ttft_s": 0.52,
+          "dauer_s": 6.71,
+          "prompt_tokens": 33,
+          "completion_tokens": 800,
+          "tok_s": 129.2
+        }
+      ]
+    },
+    {
+      "nutzer": 4,
+      "fehler": 0,
+      "ttft_p50": 0.41,
+      "ttft_p95": 0.41,
+      "tok_s_p50": 110.55,
+      "tok_s_min": 109.1,
+      "gesamt_tok_s": 418.5,
+      "dauer_max_s": 7.7,
+      "einzeln": [
+        {
+          "ttft_s": 0.41,
+          "dauer_s": 7.64,
+          "prompt_tokens": 37,
+          "completion_tokens": 800,
+          "tok_s": 110.6
+        },
+        {
+          "ttft_s": 0.23,
+          "dauer_s": 7.57,
+          "prompt_tokens": 33,
+          "completion_tokens": 800,
+          "tok_s": 109.1
+        },
+        {
+          "ttft_s": 0.41,
+          "dauer_s": 7.64,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 110.6
+        },
+        {
+          "ttft_s": 0.41,
+          "dauer_s": 7.65,
+          "prompt_tokens": 36,
+          "completion_tokens": 800,
+          "tok_s": 110.5
+        }
+      ]
+    },
+    {
+      "nutzer": 8,
+      "fehler": 0,
+      "ttft_p50": 4.12,
+      "ttft_p95": 7.87,
+      "tok_s_p50": 110.5,
+      "tok_s_min": 108.4,
+      "gesamt_tok_s": 424.2,
+      "dauer_max_s": 15.1,
+      "einzeln": [
+        {
+          "ttft_s": 7.87,
+          "dauer_s": 15.08,
+          "prompt_tokens": 37,
+          "completion_tokens": 800,
+          "tok_s": 110.9
+        },
+        {
+          "ttft_s": 0.37,
+          "dauer_s": 7.63,
+          "prompt_tokens": 33,
+          "completion_tokens": 800,
+          "tok_s": 110.2
+        },
+        {
+          "ttft_s": 0.37,
+          "dauer_s": 7.74,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 108.4
+        },
+        {
+          "ttft_s": 7.86,
+          "dauer_s": 15.08,
+          "prompt_tokens": 36,
+          "completion_tokens": 800,
+          "tok_s": 110.8
+        },
+        {
+          "ttft_s": 7.86,
+          "dauer_s": 15.08,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 110.8
+        },
+        {
+          "ttft_s": 0.37,
+          "dauer_s": 7.74,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 108.5
+        },
+        {
+          "ttft_s": 7.86,
+          "dauer_s": 15.07,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 110.9
+        },
+        {
+          "ttft_s": 0.37,
+          "dauer_s": 7.75,
+          "prompt_tokens": 37,
+          "completion_tokens": 800,
+          "tok_s": 108.4
+        }
+      ]
+    },
+    {
+      "nutzer": 16,
+      "fehler": 0,
+      "ttft_p50": 11.56,
+      "ttft_p95": 22.7,
+      "tok_s_p50": 109.65,
+      "tok_s_min": 108.7,
+      "gesamt_tok_s": 427.4,
+      "dauer_max_s": 29.9,
+      "einzeln": [
+        {
+          "ttft_s": 15.3,
+          "dauer_s": 22.59,
+          "prompt_tokens": 37,
+          "completion_tokens": 800,
+          "tok_s": 109.7
+        },
+        {
+          "ttft_s": 0.37,
+          "dauer_s": 7.73,
+          "prompt_tokens": 33,
+          "completion_tokens": 800,
+          "tok_s": 108.7
+        },
+        {
+          "ttft_s": 22.7,
+          "dauer_s": 29.93,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 110.7
+        },
+        {
+          "ttft_s": 22.71,
+          "dauer_s": 29.94,
+          "prompt_tokens": 36,
+          "completion_tokens": 800,
+          "tok_s": 110.6
+        },
+        {
+          "ttft_s": 0.36,
+          "dauer_s": 7.72,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 108.8
+        },
+        {
+          "ttft_s": 7.84,
+          "dauer_s": 15.17,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 109.0
+        },
+        {
+          "ttft_s": 7.84,
+          "dauer_s": 15.17,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 109.1
+        },
+        {
+          "ttft_s": 22.7,
+          "dauer_s": 29.93,
+          "prompt_tokens": 37,
+          "completion_tokens": 800,
+          "tok_s": 110.6
+        },
+        {
+          "ttft_s": 7.84,
+          "dauer_s": 15.17,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 109.1
+        },
+        {
+          "ttft_s": 0.36,
+          "dauer_s": 7.72,
+          "prompt_tokens": 32,
+          "completion_tokens": 800,
+          "tok_s": 108.7
+        },
+        {
+          "ttft_s": 15.29,
+          "dauer_s": 22.58,
+          "prompt_tokens": 34,
+          "completion_tokens": 800,
+          "tok_s": 109.6
+        },
+        {
+          "ttft_s": 22.7,
+          "dauer_s": 29.93,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 110.6
+        },
+        {
+          "ttft_s": 7.83,
+          "dauer_s": 15.04,
+          "prompt_tokens": 35,
+          "completion_tokens": 800,
+          "tok_s": 110.9
+        },
+        {
+          "ttft_s": 15.28,
+          "dauer_s": 22.58,
+          "prompt_tokens": 34,
+          "completion_tokens": 800,
+          "tok_s": 109.6
+        },
+        {
+          "ttft_s": 15.28,
+          "dauer_s": 22.46,
+          "prompt_tokens": 33,
+          "completion_tokens": 800,
+          "tok_s": 111.5
+        },
+        {
+          "ttft_s": 0.36,
+          "dauer_s": 7.6,
+          "prompt_tokens": 39,
+          "completion_tokens": 800,
+          "tok_s": 110.5
+        }
+      ]
+    }
+  ],
+  "abap": [
+    {
+      "aufgabe": "alv-report",
+      "ttft_s": 77.4,
+      "dauer_s": 152.48,
+      "prompt_tokens": 122,
+      "completion_tokens": 8000,
+      "tok_s": 106.5,
+      "denk_zeichen": 30825,
+      "antwort_zeichen": 0,
+      "abgeschnitten": true
+    },
+    {
+      "aufgabe": "open-sql",
+      "ttft_s": 3.59,
+      "dauer_s": 77.28,
+      "prompt_tokens": 108,
+      "completion_tokens": 8000,
+      "tok_s": 108.6,
+      "denk_zeichen": 28478,
+      "antwort_zeichen": 0,
+      "abgeschnitten": true
+    },
+    {
+      "aufgabe": "cds-view",
+      "ttft_s": 3.59,
+      "dauer_s": 77.15,
+      "prompt_tokens": 90,
+      "completion_tokens": 8000,
+      "tok_s": 108.8,
+      "denk_zeichen": 30842,
+      "antwort_zeichen": 0,
+      "abgeschnitten": true
+    },
+    {
+      "aufgabe": "rap",
+      "ttft_s": 3.59,
+      "dauer_s": 77.28,
+      "prompt_tokens": 99,
+      "completion_tokens": 8000,
+      "tok_s": 108.6,
+      "denk_zeichen": 33022,
+      "antwort_zeichen": 0,
+      "abgeschnitten": true
+    },
+    {
+      "aufgabe": "fehlersuche",
+      "ttft_s": 3.59,
+      "dauer_s": 77.28,
+      "prompt_tokens": 206,
+      "completion_tokens": 8000,
+      "tok_s": 108.6,
+      "denk_zeichen": 30305,
+      "antwort_zeichen": 0,
+      "abgeschnitten": true
+    },
+    {
+      "aufgabe": "modernisieren",
+      "ttft_s": 77.4,
+      "dauer_s": 152.48,
+      "prompt_tokens": 212,
+      "completion_tokens": 8000,
+      "tok_s": 106.6,
+      "denk_zeichen": 32875,
+      "antwort_zeichen": 0,
+      "abgeschnitten": true
+    },
+    {
+      "aufgabe": "amdp",
+      "ttft_s": 77.4,
+      "dauer_s": 152.49,
+      "prompt_tokens": 110,
+      "completion_tokens": 8000,
+      "tok_s": 106.5,
+      "denk_zeichen": 31852,
+      "antwort_zeichen": 0,
+      "abgeschnitten": true
+    }
+  ],
+  "denken": [
+    {
+      "stufe": "low",
+      "ttft_s": 0.43,
+      "dauer_s": 2.8,
+      "prompt_tokens": 114,
+      "completion_tokens": 338,
+      "tok_s": 142.8,
+      "denk_zeichen": 280,
+      "richtig": true,
+      "antwort": "**Einkaufspreis:**\n- 12 kg · 8,40 € = 100,80 €\n- 7,5 kg · 11,20 € = 84,00 €\n- 4 kg · 14,90 € = 59,60 €\n- Summe: 244,40 € für 23,5 kg → 10,40 €/kg\n\n**Verkaufspreis pro kg:**\n10,40 € · 1,35 = 14,04 € → · 1,07 = **15,0228 €/kg**\n\n**Preis pro 250-g-Päckchen:**\n15,0228 € : 4 = 3,7557 € ≈ **3,76 €**"
+    },
+    {
+      "stufe": "high",
+      "ttft_s": 0.23,
+      "dauer_s": 3.69,
+      "prompt_tokens": 114,
+      "completion_tokens": 495,
+      "tok_s": 143.3,
+      "denk_zeichen": 286,
+      "richtig": true,
+      "antwort": ",40 €**\n\n**Schritt 2: Einkaufspreis pro kg**\n\nGesamtmenge: 12 + 7,5 + 4 = 23,5 kg\n\n$$\\frac{244{,}40\\ €}{23{,}5\\ \\text{kg}} = 10{,}40\\ €/\\text{kg}$$\n\n**Schritt 3: Verkaufspreis pro kg (mit Aufschlag und MwSt.)**\n\n$$10{,}40 \\cdot 1{,}35 \\cdot 1{,}07 = 15{,}0228\\ €/\\text{kg}$$\n\n**Schritt 4: Preis für 250 g**\n\n$$15{,}0228 \\cdot 0{,}25 = 3{,}7557\\ €$$\n\n## Ergebnis\n\nDas 250-g-Päckchen kostet **3,76 €**."
+    },
+    {
+      "stufe": "max",
+      "ttft_s": 0.42,
+      "dauer_s": 6.48,
+      "prompt_tokens": 114,
+      "completion_tokens": 866,
+      "tok_s": 143.1,
+      "denk_zeichen": 1066,
+      "richtig": true,
+      "antwort": "}5\\ \\text{kg}} = 10{,}40\\ €/\\text{kg}$$\n\n## Schritt 3: Aufschlag und MwSt.\n\n**Mit 35 % Aufschlag:**\n$$10{,}40 \\cdot 1{,}35 = 14{,}04\\ €/\\text{kg}$$\n\n**Mit 7 % MwSt.:**\n$$14{,}04 \\cdot 1{,}07 = 15{,}0228\\ €/\\text{kg}$$\n\n## Schritt 4: Preis für 250 g\n\n$$15{,}0228\\ €/\\text{kg} \\cdot 0{,}25\\ \\text{kg} = 3{,}7557\\ €$$\n\n## Ergebnis\n\n$$\\boxed{3{,}76\\ €}$$\n\nEin 250-g-Päckchen kostet im Verkauf **3,76 €**."
+    }
+  ],
+  "kontext": {
+    "vier_mal_120k": {
+      "wand_s": 11.7,
+      "treffer": 4,
+      "einzeln": [
+        {
+          "ttft_s": 10.51,
+          "dauer_s": 11.71,
+          "prompt_tokens": 114052,
+          "completion_tokens": 139,
+          "tok_s": 116.0
+        },
+        {
+          "ttft_s": 6.39,
+          "dauer_s": 11.14,
+          "prompt_tokens": 114052,
+          "completion_tokens": 91,
+          "tok_s": 19.1
+        },
+        {
+          "ttft_s": 8.51,
+          "dauer_s": 11.61,
+          "prompt_tokens": 114051,
+          "completion_tokens": 132,
+          "tok_s": 42.6
+        },
+        {
+          "ttft_s": 4.82,
+          "dauer_s": 11.63,
+          "prompt_tokens": 114052,
+          "completion_tokens": 148,
+          "tok_s": 21.8
+        }
+      ]
+    },
+    "500k_neben_chats": {
+      "referenz": [
+        {
+          "ttft_s": 0.46,
+          "dauer_s": 6.01,
+          "prompt_tokens": 32,
+          "completion_tokens": 600,
+          "tok_s": 108.2
+        },
+        {
+          "ttft_s": 0.47,
+          "dauer_s": 6.02,
+          "prompt_tokens": 28,
+          "completion_tokens": 600,
+          "tok_s": 108.1
+        },
+        {
+          "ttft_s": 0.36,
+          "dauer_s": 6.01,
+          "prompt_tokens": 30,
+          "completion_tokens": 600,
+          "tok_s": 106.2
+        }
+      ],
+      "mit_500k": [
+        {
+          "ttft_s": 0.4,
+          "dauer_s": 19.37,
+          "prompt_tokens": 32,
+          "completion_tokens": 600,
+          "tok_s": 31.6
+        },
+        {
+          "ttft_s": 0.24,
+          "dauer_s": 19.46,
+          "prompt_tokens": 28,
+          "completion_tokens": 600,
+          "tok_s": 31.2
+        },
+        {
+          "ttft_s": 0.41,
+          "dauer_s": 19.73,
+          "prompt_tokens": 30,
+          "completion_tokens": 600,
+          "tok_s": 31.0
+        }
+      ],
+      "gross": {
+        "ttft_s": 12.96,
+        "dauer_s": 14.07,
+        "prompt_tokens": 475012,
+        "completion_tokens": 139,
+        "tok_s": 125.4
+      },
+      "gross_gefunden": true
+    },
+    "prefix_cache": {
+      "erste_ttft_s": 12.96,
+      "zweite_ttft_s": 6.21,
+      "zweite": {
+        "ttft_s": 6.21,
+        "dauer_s": 8.66,
+        "prompt_tokens": 475007,
+        "completion_tokens": 366,
+        "tok_s": 149.5
+      }
+    }
+  }
+}

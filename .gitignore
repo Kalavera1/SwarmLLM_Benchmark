@@ -1,7 +1,6 @@
 # Zugangsdaten – niemals committen
 .env
 .env.*
-!.env.example
 *.pem
 *.key
 id_rsa*
@@ -26,6 +25,11 @@ cache/
 
 # Rohdaten der Benchmarks (nur aggregierte Ergebnisse kommen ins Repo)
 results/raw/
+# Ergebnisse gegen den Mock sagen nichts über Modelle aus
+results/mock/
+
+# Daten des laufenden Pods (enthält den API-Key dieses Laufs)
+runpod/.aktueller-pod.json
 
 # Python
 __pycache__/
@@ -37,10 +41,13 @@ venv/
 # Logs und lokale Daten
 *.log
 logs/
-local/data/
+chat-stack/data/
 
 # Editor und Betriebssystem
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Eigene Werte und Zugangsdaten (Vorlage: benchmark.conf.example)
+benchmark.conf
