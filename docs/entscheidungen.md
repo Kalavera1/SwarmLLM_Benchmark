@@ -4,6 +4,19 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-16 – Zielhardware ist Max-Q (300 W); Skripte anbieterunabhängig
+
+**Befund:** Der eigene Server zeigt bei `nvidia-smi` ein Power-Limit von **300 W** – das spricht für die RTX PRO 6000 **Max-Q** Workstation Edition (Bestätigung mit `nvidia-smi --query-gpu=name,power.limit --format=csv` steht aus). Server- und Workstation-Edition in der Cloud laufen mit 600 W. Treiber 615.71.09 – derselbe, mit dem das DeepSeek-V4.1-Rezept getestet wurde.
+
+**Entscheidung:**
+- Das Startskript im Container ist für RunPod, Vast.ai und den eigenen Server gleich; RunPod ist nur eine Automatisierung obendrauf.
+- Modelle, die komplett im VRAM liegen (Qwen, GLM), dürfen in der Cloud gemessen werden. DeepSeek V4.1 Flash mit CPU-Auslagerung wird auf dem eigenen Server oder auf einem Host mit bekannter, ähnlicher CPU gemessen (Kollege: EPYC 8004 mit DDR5, ≈ 250 GB RAM).
+- Jeder Host-Check speichert Power-Limit und CPU-Modell.
+
+**Warum:**
+- Prefill ist Rechenarbeit und leidet unter 300 W; Cloud-Karten mit 600 W wären dort zu optimistisch. Decode hängt vor allem an der Speicherbandbreite, die bei allen Varianten gleich ist.
+- Bei CPU-Auslagerung bestimmen CPU, RAM-Bandbreite und NVMe das Tempo. RunPod lässt das CPU-Modell nicht auswählen; Vast.ai zeigt es pro Angebot (Stand 16.11.2026 pro Karte: WS ab 1,00 $/h, Median 1,49 $; S ab 1,33 $/h, Median 1,73 $ – laut Screenshot des Nutzers).
+
 ## 2026-11-16 – DeepSeek V4.1 Flash ist das wichtigste Modell, Weg noch offen
 
 **Entscheidung:** DeepSeek V4.1 Flash (763B, Bilder, 1M Kontext) wird getestet. Offen ist, auf welchem Weg:
