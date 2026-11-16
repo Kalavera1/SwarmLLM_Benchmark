@@ -15,7 +15,8 @@ cd "$(dirname "$0")"
 # ---------------------------------------------------------------------------
 BASIS="${1:-http://127.0.0.1:4000}"
 if [[ -z "${LITELLM_MASTER_KEY:-}" && -f ../.env ]]; then
-  LITELLM_MASTER_KEY=$(grep -E '^LITELLM_MASTER_KEY=' ../.env | cut -d= -f2- || true)
+  # wie in deploy.sh: letzte Zeile gilt, Anführungszeichen/Leerzeichen/\r weg
+  LITELLM_MASTER_KEY=$(grep -E '^LITELLM_MASTER_KEY=' ../.env | tail -n1 | cut -d= -f2- | tr -d "\r\"' \t" || true)
 fi
 [[ -n "${LITELLM_MASTER_KEY:-}" ]] || {
   echo "FEHLER: LITELLM_MASTER_KEY nicht gesetzt (Umgebung oder ../.env)." >&2
