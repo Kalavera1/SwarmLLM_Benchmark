@@ -20,7 +20,7 @@ python3 -m bench run integration --profil mock --ziel http://127.0.0.1:8000/v1
 python3 -m bench auswertung --speichern                  # Vergleichstabelle
 ```
 
-**Woher Ziel und Key kommen:** `--ziel` → Umgebung `BENCH_ZIEL_URL` → `runpod/.aktueller-pod.json` (vom Pod-Skript geschrieben) → `BENCH_ZIEL_URL` in `.env` → `http://127.0.0.1:8000/v1`. Der Key kommt aus der Pod-Datei oder `VLLM_API_KEY` in `.env`. Ohne Key verweigert die Suite den Start (Regel 8), außer beim Mock-Profil.
+**Woher Ziel und Key kommen:** `--ziel` → Umgebung `BENCH_ZIEL_URL` → `runpod/.aktueller-pod.json` (von `rp.py` geschrieben) → `BENCH_ZIEL_URL` in `benchmark.conf` → `http://127.0.0.1:8000/v1`. Der Key kommt aus der Pod-Datei oder `VLLM_API_KEY` in `benchmark.conf`. Ohne Key verweigert die Suite den Start (Regel 8), außer beim Mock-Profil.
 
 **Geldschonend:** Bei `alle` laufen zuerst `integration` und `waechter`. Schlägt einer davon fehl, bricht der Lauf ab, bevor teure Blöcke GPU-Zeit kosten (`--weiter` erzwingt den Rest). Jeder Block speichert Dauer und Kosten (`kosten_usd`, aus dem Stundenpreis des Pods).
 
