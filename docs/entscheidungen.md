@@ -4,6 +4,69 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-16 – DeepSeek V4.1 Flash ist das wichtigste Modell, Weg noch offen
+
+**Entscheidung:** DeepSeek V4.1 Flash (763B, Bilder, 1M Kontext) wird getestet. Offen ist, auf welchem Weg:
+
+| Weg | Hardware | Vorteil | Nachteil |
+|---|---|---|---|
+| A: Rezept theogravity | 2× RTX PRO 6000 (Zielhardware) | 512k Kontext, ≈ 250 tok/s bei einem Nutzer, 41,6 s bis zum ersten Token bei 505k (Angaben des Autors) | ein Autor, eine Maschine; gepatchtes vLLM, eigene Images müssen gebaut werden; Tempo hängt an CPU, RAM (≥ 128 GiB empfohlen) und NVMe des Hosts – bei RunPod-Community-Hosts nicht planbar |
+| B: Karmic Kraken `ds41-flash` | 4× RTX PRO 6000 | fertiges Image, Bilder verifiziert, ≈ 249 tok/s bei einem Nutzer (rtx6kpro-Wiki) | misst nicht die Zielhardware; ≈ 6,56 $/h |
+
+**Warum nicht einfach quantisieren:** Selbst mit 3 Bit sind es ≈ 322 GiB Gewichte, also deutlich mehr als 192 GB VRAM.
+
+**Quellen:** [theogravity/deepseek-flash-v4.1-dual-rtx-6000](https://github.com/theogravity/deepseek-flash-v4.1-dual-rtx-6000), [rtx6kpro: DeepSeek V4.1 Flash](https://github.com/local-inference-lab/rtx6kpro/blob/master/models/deepseek-v4.1-flash.md)
+
+## 2026-11-16 – Geldschonend: Community Cloud ohne Network Volume
+
+**Entscheidung:** GPU-Pods laufen standardmäßig in der **Community Cloud**. Es gibt **kein Network Volume**; die Gewichte lädt jeder Pod beim Start auf seine Container-Disk. Alle Testblöcke eines Modells laufen in **einem** Pod am Stück. Ein Budget in `.env` (`RUNPOD_BUDGET_USD`) begrenzt die Summe aller Läufe.
+
+**Warum:**
+- Preis pro Karte und Stunde (on-demand, Stand 15.11.2026): Community 1,64 $, Secure 2,69 $. Für 2 Karten 3,28 $/h gegen 5,38 $/h.
+- Network Volumes gibt es bei RunPod **nur in der Secure Cloud** und kosten 0,07 $/GB/Monat, auch ohne laufenden Pod. 600 GB für alle Modelle wären ca. 42 $/Monat.
+- Ein Download von ca. 30–190 GB beim Start kostet in der Community Cloud nur wenige Minuten GPU-Zeit. Bei geschätzt 6–8 Pod-Starts ist das günstiger als Volume plus Secure-Aufpreis.
+- Jeder Kaltstart (Laden, JIT, Autotuning) kostet 10–20 Minuten. Deshalb ein Pod pro Modell, nicht pro Block.
+
+**Folgen:** Phase 3 (Network Volume vorbefüllen) entfällt. Die Secure Cloud mit Volume bleibt als Option im Skript, falls Community-Hosts kein P2P bieten.
+
+**Risiko:** Community-Hosts sind unterschiedlich gut, P2P zwischen den Karten klappt nicht überall. Der Pod-Check verwirft solche Hosts nach wenigen Minuten.
+
+**Quellen:** [computeprices.com, RunPod RTX PRO 6000](https://computeprices.com/providers/runpod/gpus/rtx-pro-6000), [RunPod-Doku Network Volumes](https://docs.runpod.io/storage/network-volumes)
+
+## 2026-11-16 – RunPod REST-API v2
+
+**Entscheidung:** Die Skripte nutzen `https://api.runpod.io/v2`.
+
+**Warum:** Die v1-API (`rest.runpod.io/v1`) ist laut RunPod zum 15.11.2026 abgeschaltet. In v2 heißen Felder anders (`gpu: {id, count}` statt `gpuTypeIds`, `cloud` statt `cloudType`, Standard ist `SECURE`), und es gibt kein Feld für eine maximale Laufzeit – der Watchdog bleibt also unsere Aufgabe.
+
+**Quelle:** [RunPod: Migrate from v1](https://docs.runpod.io/api-reference-v2/migrate-from-v1), [Create a Pod](https://docs.runpod.io/api-reference-v2/pods/create-a-pod)
+
+## 2026-11-16 – Neue Modellauswahl: Bilder, Agenten, Kosten
+
+**Entscheidung:** Testreihenfolge (siehe [README](../README.md#modell-kandidaten)):
+
+0. **Qwen3.8-27B** als Referenz und für den ersten GPU-Test
+1. **Qwen3.8-Flash-Next** (FP8, N-gram-Tabelle im Host-RAM)
+2. **GLM-5.3-Flash** als `nvidia/GLM-5.3-Flash-FP4-Local`
+3. DeepSeek V4 Flash und GLM über die Purtell-Runtime nur bei Restbudget
+
+**Warum:**
+- **Bilder und Agenten sind neue Anforderungen.** DeepSeek V4 Flash kann nur Text. Die Bild-Variante DeepSeek-V4-Flash-Vision-Exp braucht laut vLLM-Recipe ca. 202 GB VRAM und gilt auf 2 Karten als nicht unterstützt.
+- **Qwen3.8-27B zuerst:** offizielles vLLM-Recipe für die RTX Pro 6000, nur ca. 29 GB Download, läuft auf einer Karte. Damit lässt sich die ganze Kette (Pod, Check, Testsuite) für wenig Geld prüfen, bevor ein großes Modell Stunden kostet. Danach dient es als Referenz: Ist ein großes Modell schlecht, zeigt der Vergleich, ob es am Modell oder an der Umgebung liegt.
+- **Qwen3.8-Flash-Next:** unabhängig gemessen auf 2× RTX PRO 6000 ca. 146 tok/s mit MTP bei 512k Kontext (stondo), läuft mit Upstream-vLLM ohne Spezial-Runtime.
+- **GLM-5.3-Flash FP4-Local:** NVIDIA hat genau diese Hardware validiert (ca. 166 GiB, 1,8 Mio. Token FP8-KV-Cache). Laut Z.ai die besten Agenten-Werte unter den Kandidaten (Herstellerangaben). Ein Community-Test meldete auf SM120 Endlosschleifen in der Ausgabe – deshalb gibt es jetzt den Qualitäts-Wächter in der Testsuite.
+- **Purtell-EXL3 wird nicht gestrichen**, aber nachrangig: Das Ziel ist ausdrücklich vLLM, und der NVIDIA-Checkpoint läuft in einem vLLM-Container.
+
+**Herstellerangaben vs. Messung:** Die Agenten-Benchmarks (Terminal-Bench, SWE-bench, Toolathlon) stammen fast alle von den Herstellern. Entschieden wird nach unseren eigenen Messungen.
+
+**Quellen:** [vLLM Recipes](https://recipes.vllm.ai/browse), [nvidia/GLM-5.3-Flash-FP4-Local](https://huggingface.co/nvidia/GLM-5.3-Flash-FP4-Local), [stondo: Qwen3.8-Flash-Next auf 2× RTX PRO 6000](https://stondo.github.io/posts/qwen38-flash-next-512k-two-rtx-pro-6000/), [Qwen3.8-27B Recipe](https://recipes.vllm.ai/Qwen/Qwen3.8-27B), [DeepSeek-V4-Flash-Vision-Exp Recipe](https://recipes.vllm.ai/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp)
+
+## 2026-11-16 – Testsuite misst gegen Ziele (SLOs), nicht nur Durchsatz
+
+**Entscheidung:** Der Lastmix steigt bis 30 Nutzer und wird gegen feste Zielwerte bewertet: Zeit bis zum ersten Token im Chat (p90) und Ausgabetempo pro Nutzer. Ergebnis ist die größte Nutzerzahl, bei der die Ziele noch eingehalten werden. Neu dazu kommen die Blöcke Bilder, Agentenschleife und Qualitäts-Wächter.
+
+**Warum:** Die eigentliche Frage ist „Wie viele Nutzer schafft das Modell, bevor es zu langsam wird?“. Reine Durchsatzzahlen beantworten das nicht. Spekulatives Decoding wird mit natürlichen Texten gemessen, nicht mit Zufallstokens, sonst sind die Akzeptanzraten unrealistisch.
+
 ## 2026-11-01 – Testsuite nach V-Modell, ABAP als automatisch geprüfter Eval
 
 **Entscheidung:** Die Tests werden in vier Ebenen gegliedert (Unit, Integration, System, Abnahme) und über eine Kommandozeile blockweise gestartet. Die Modellqualität bei ABAP wird als eigener Eval-Block gemessen: Codeblöcke werden mit abaplint geprüft, dazu kommt eine feste Kriterienliste je Aufgabe.
