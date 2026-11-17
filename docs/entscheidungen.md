@@ -4,6 +4,20 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-17 – Qwen3.8-Flash-Next gestrichen, GLM-5.3 Q3 ohne Bilder
+
+**Entscheidung:**
+- **Qwen3.8-Flash-Next** (bisher Rang 4) fliegt aus der Auswahl; Profil `qwen38-flash-next-fp8` gelöscht, Phase 5 entfällt. Die Rangfolge ist jetzt: 1. GLM-5.3 Q3, 2. DeepSeek V4.1 Flash, 3. GLM-5.3-Flash, 4. Qwen3.8-27B als Referenz.
+- **GLM-5.3 Q3 wird ohne Bilder gemessen** (`VISION=0`, Block `bilder` entfällt).
+
+**Warum:** Vorgabe des Nutzers: „Qwen 4 ist auch raus“ (gelesen als Rang 4, Qwen3.8-Flash-Next; das Referenzmodell Qwen3.8-27B bleibt) und GLM-5.3 ohne Bilder testen, falls es keine kann. Laut Z.ai nimmt GLM-5.3 nur Text an. Bildfähig in der GLM-Reihe ist GLM-5.3-Flash (Rang 3).
+
+**Folge für den Betrieb:** Die Anforderung „Bilder“ erfüllt GLM-5.3 Q3 allein nicht. Wird es das Hauptmodell, braucht es für Bilder ein zweites Modell (z. B. GLM-5.3-Flash oder Qwen3.8-27B) – das ist eine Frage der Auswertung (Phase 10), nicht der Messung.
+
+**Nebenbei aus der Unsloth-Doku:** Bei GLM-5.3 lässt sich das Denken nicht abschalten, nur abstufen (`reasoning_effort` low/high/max). Das betrifft `DENKSTUFEN` im Profil.
+
+**Quellen (abgerufen 17.11.2026):** [Z.ai: GLM-5.3 – „currently supports text-only inputs“](https://docs.z.ai/guides/llm/glm-5.3), [Hugging Face: zai-org/GLM-5.3 – Pipeline „text-generation“](https://huggingface.co/zai-org/GLM-5.3), [Unsloth: GLM-5.3 – Denken, UD-Q3_K_XL 343 GB](https://unsloth.ai/docs/models/glm-5.3), [Apidog: GLM-5.3-Flash als erstes nativ multimodales Modell der GLM-5-Reihe](https://apidog.com/blog/glm-5-3-flash-what-is/)
+
 ## 2026-11-17 – Auto-Stopp auf Vast.ai: Die Instanz löscht sich selbst
 
 **Entscheidung:** `server/im-container-starten.sh` startet auf Vast.ai einen Watchdog (`server/vast-watchdog.sh`), der die Instanz nach 90 Min. (oder `--minuten N`) über die Vast-API löscht. Er läuft in der Instanz selbst und nutzt den Key, den Vast.ai jeder Instanz nur für sie mitgibt (`CONTAINER_API_KEY`). Zeitpunkt sichtbar unter `:8001/watchdog.json`; verlängern durch neu Stellen, ein „aus“ gibt es nicht.
