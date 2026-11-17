@@ -12,11 +12,11 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 | 2 | Testsuite | 0 € | in Review |
 | 3 | Startskripte, RunPod-Steuerung, Modellprofile, `benchmark.conf` | 0 € | in Review |
 | 4 | Erster GPU-Test mit Qwen3.8-27B | ca. 1 h ≈ 4 $ | offen |
-| 5 | ~~Qwen3.8-Flash-Next~~ | – | entfällt (17.11.2026) |
+| 5 | Qwen3.8-Flash-Next | 3–5 h ≈ 10–16 $ | offen |
 | 6 | GLM-5.3-Flash | 3–5 h ≈ 10–16 $ | offen |
 | 7 | DeepSeek V4.1 Flash (Rang 2) | Google Cloud G4 ≈ 4,10–4,60 $/h Spot, eigener Server 0 € | Host offen |
 | 8 | GLM-5.3 Q3 (Rang 1, wichtigstes Modell), ohne Bilder | wie Phase 7 | Runtime und Host offen |
-| 9 | Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime | je 3–5 h | optional |
+| 9 | Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime; Qwen4, sobald Gewichte offen sind | je 3–5 h | optional |
 | 10 | Auswertung | 0 € | offen |
 
 ---
@@ -99,9 +99,13 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 **Fertig, wenn:** Check-Ergebnis, Startprotokoll und Ergebnisse liegen in `results/`.
 
-## Phase 5 – Qwen3.8-Flash-Next (entfällt)
+## Phase 5 – Qwen3.8-Flash-Next
 
-Am 17.11.2026 aus der Auswahl genommen, siehe [Entscheidungslog](entscheidungen.md). Die Nummer bleibt frei, damit die übrigen Phasen ihre Nummern behalten.
+**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`. Varianten:
+- MTP an/aus
+- KV-Cache BF16 gegen FP8 (FP8 lief auf SM120 laut Community nicht mit dem QSA-Pfad)
+
+**Fertig, wenn:** Ergebnisse und Zusammenfassung in `results/`.
 
 ## Phase 6 – GLM-5.3-Flash
 
@@ -131,9 +135,11 @@ Am 17.11.2026 aus der Auswahl genommen, siehe [Entscheidungslog](entscheidungen.
 
 **Wichtig:** 500k Kontext ist hier das größte Risiko. Mit llama.cpp-Tempo dauert ein 500k-Prompt über eine Stunde.
 
-## Phase 9 – Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime
+## Phase 9 – Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime, Qwen4
 
 Optional, nach Phase 8. DeepSeek V4 Flash kann keine Bilder; die Purtell-Runtime ist kein Upstream-vLLM.
+
+**Qwen4:** aufnehmen, sobald ein Modell mit offenen Gewichten erscheint, das auf 2 Karten passt (angekündigt: Qwen4-27B, -Flash). Stand 17.11.2026 gibt es nur Qwen4-Max als API-Vorschau ohne Gewichte.
 
 ## Phase 10 – Auswertung
 
