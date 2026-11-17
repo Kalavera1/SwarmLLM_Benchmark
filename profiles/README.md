@@ -6,9 +6,8 @@ Ein Ordner pro Modell mit `profile.env`. Das Profil ist die einzige Stelle, an d
 |---|---|---|
 | `mock` | Mock-Server, keine GPU | Selbsttest der Testsuite |
 | `qwen38-27b` | Qwen3.8-27B, NVFP4, Data-Parallel 2 | bereit (nach Pinnen) |
-| `qwen38-flash-next-fp8` | Qwen3.8-Flash-Next, FP8, N-gram-Tabelle im RAM | bereit (nach Pinnen) |
 | `glm53-flash-fp4` | GLM-5.3-Flash, NVIDIA FP4-Local | bereit (nach Pinnen) |
-| `glm53-q3` | GLM-5.3 in Q3, CPU-Experten | **Entwurf** – Runtime und Host offen |
+| `glm53-q3` | GLM-5.3 in Q3, CPU-Experten, nur Text | **Entwurf** – Runtime und Host offen |
 | `deepseek-v41-flash` | DeepSeek V4.1 Flash, CPU-Experten | **Entwurf** – Host offen |
 
 ## Pinnen (Regel 4)

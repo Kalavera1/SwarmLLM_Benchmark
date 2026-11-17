@@ -2,7 +2,7 @@
 
 Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder Phase die [Erfahrungen](erfahrungen.md) durchsehen.
 
-Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,28 $/h (Stand 15.11.2026). Die Ausgabengrenze setzt ihr als Limit im RunPod-Konto.
+Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,28 $/h (Stand 15.11.2026). Die Ausgabengrenze setzt ihr als Limit im Konto beim Anbieter.
 
 | Phase | Ziel | Kosten (geschätzt) | Status |
 |---|---|---|---|
@@ -12,10 +12,10 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 | 2 | Testsuite | 0 € | in Review |
 | 3 | Startskripte, RunPod-Steuerung, Modellprofile, `benchmark.conf` | 0 € | in Review |
 | 4 | Erster GPU-Test mit Qwen3.8-27B | ca. 1 h ≈ 4 $ | offen |
-| 5 | Qwen3.8-Flash-Next | 3–5 h ≈ 10–16 $ | offen |
+| 5 | ~~Qwen3.8-Flash-Next~~ | – | entfällt (17.11.2026) |
 | 6 | GLM-5.3-Flash | 3–5 h ≈ 10–16 $ | offen |
 | 7 | DeepSeek V4.1 Flash (Rang 2) | Google Cloud G4 ≈ 4,10–4,60 $/h Spot, eigener Server 0 € | Host offen |
-| 8 | GLM-5.3 Q3 (Rang 1, wichtigstes Modell) | wie Phase 7 | Runtime und Host offen |
+| 8 | GLM-5.3 Q3 (Rang 1, wichtigstes Modell), ohne Bilder | wie Phase 7 | Runtime und Host offen |
 | 9 | Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime | je 3–5 h | optional |
 | 10 | Auswertung | 0 € | offen |
 
@@ -75,7 +75,8 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 **Ergebnis:**
 - `server/start-im-container.sh`: ein Startskript für alle GPU-Server (RunPod, Cloud-VM, Vast.ai, eigener Server) mit Host-Check (P2P, CPU, RAM-Bandbreite, Power-Limit); `server/lokal-starten.sh` für Rechner mit Docker.
-- `benchmark.conf` für alle eigenen Werte und `ANLEITUNG.md` für den Ablauf von einem beliebigen Steuerrechner aus.
+- `benchmark.conf` für alle eigenen Werte und `ANLEITUNG.md` für den Ablauf von einem beliebigen Steuerrechner aus; Starten und Abbauen des GPU-Servers je Anbieter in `anleitung/` (RunPod, Google Cloud, Vast.ai, eigener Server).
+- `server/im-container-starten.sh` für Anbieter mit SSH in den Container (Vast.ai) und `server/vast-watchdog.sh`: Die Vast-Instanz löscht sich nach Ablauf selbst (Regel 5).
 - `runpod/` für die REST-API v2: GPU-Typen anzeigen, Pod anlegen, prüfen, Status, löschen. Ohne Network Volume: Der Pod lädt die gepinnte Revision beim Start selbst.
 - Vor jedem Start Kostenschätzung und Bestätigung. Jeder Pod wird mit tatsächlichen Kosten in `results/kosten.csv` verbucht. Die Ausgabengrenze steht im RunPod-Konto (Kartenlimit).
 - Watchdog auf dem Steuerrechner, der den Pod nach `POD_MAX_MINUTES` terminiert.
@@ -98,13 +99,9 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 **Fertig, wenn:** Check-Ergebnis, Startprotokoll und Ergebnisse liegen in `results/`.
 
-## Phase 5 – Qwen3.8-Flash-Next
+## Phase 5 – Qwen3.8-Flash-Next (entfällt)
 
-**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`. Varianten:
-- MTP an/aus
-- KV-Cache BF16 gegen FP8 (FP8 lief auf SM120 laut Community nicht mit dem QSA-Pfad)
-
-**Fertig, wenn:** Ergebnisse und Zusammenfassung in `results/`.
+Am 17.11.2026 aus der Auswahl genommen, siehe [Entscheidungslog](entscheidungen.md). Die Nummer bleibt frei, damit die übrigen Phasen ihre Nummern behalten.
 
 ## Phase 6 – GLM-5.3-Flash
 
@@ -128,7 +125,8 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 **Vorher zu klären:**
 - **Runtime:** llama.cpp (erprobt, aber langsames Einlesen: ≈ 83 tok/s mit 2-Bit auf 2× RTX PRO 6000) oder KTransformers/SGLang (liest auf der GPU ein, für GLM-5 dokumentiert, für GLM-5.3 auf 2 Karten noch ohne Messung). Beide sind kein vLLM – das Startskript braucht dafür einen eigenen Startweg.
-- **Bildfähigkeit** von GLM-5.3 prüfen.
+- ~~Bildfähigkeit~~ geklärt: GLM-5.3 nimmt nur Text an (Z.ai-Doku), der Block `bilder` entfällt.
+- **Denken** lässt sich bei GLM-5.3 laut Unsloth nicht abschalten, nur abstufen (`reasoning_effort` low/high/max). Tempo-Messungen laufen dann mit `low`; `DENKSTUFEN` im Profil entsprechend setzen.
 - **Host** mit ≥ 384 GB RAM: Google Cloud G4 (360 GB) ist dafür knapp; eigener Server mit voll bestückten 12 Kanälen.
 
 **Wichtig:** 500k Kontext ist hier das größte Risiko. Mit llama.cpp-Tempo dauert ein 500k-Prompt über eine Stunde.

@@ -46,10 +46,11 @@ RUNPOD_CLOUD=COMMUNITY
 
 # ---------------------------------------------------------------------------
 # 5. Sicherheit: Watchdog
-#    Die Ausgabengrenze setzt ihr im RunPod-Konto (Limit der hinterlegten Karte).
+#    Die Ausgabengrenze setzt ihr im Konto beim Anbieter (Limit der hinterlegten Karte).
 # ---------------------------------------------------------------------------
-# Watchdog: Der Pod wird spätestens nach so vielen Minuten gelöscht.
-# Leer lassen = Standard je Stufe (schnell 90, voll 210).
+# Watchdog: Der Pod (RunPod) bzw. die Instanz (Vast.ai) wird spätestens nach
+# so vielen Minuten gelöscht. Leer lassen = Standard: RunPod je Stufe
+# (schnell 90, voll 210), Vast.ai 90.
 POD_MAX_MINUTES=
 
 # ---------------------------------------------------------------------------
