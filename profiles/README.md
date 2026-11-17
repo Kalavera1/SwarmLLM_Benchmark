@@ -11,6 +11,17 @@ Ein Ordner pro Modell mit `profile.env`. Das Profil ist die einzige Stelle, an d
 | `glm53-q3` | GLM-5.3 in Q3, CPU-Experten, nur Text | **Entwurf** – Runtime und Host offen |
 | `deepseek-v41-flash` | DeepSeek V4.1 Flash, CPU-Experten | **Entwurf** – Host offen |
 
+## Neues Modell aufnehmen
+
+```bash
+python3 profiles/neu.py <name> --quelle <org/repo> --wie <ähnliches-profil> --trocken   # Vorprüfung: passt es auf 2 Karten?
+python3 profiles/neu.py <name> --quelle <org/repo> --wie <ähnliches-profil>             # Profil als Entwurf anlegen
+```
+
+Danach Startparameter prüfen, pinnen, `PROFIL_STATUS=bereit` – Schritt für Schritt in der [ANLEITUNG](../ANLEITUNG.md#neues-modell-aufnehmen).
+
+**Modell-Wache:** `beobachten.txt` listet Modelle, auf die wir warten (zurzeit Qwen4). Die GitHub Action `.github/workflows/modell-wache.yml` sucht täglich mit `wache.py` auf Hugging Face und meldet neue Repos als Issue.
+
 ## Pinnen (Regel 4)
 
 Profile nennen nur die Quelle (`MODEL_QUELLE`, `VLLM_IMAGE_QUELLE`). Gestartet wird erst nach dem Pinnen – auf dem Steuerrechner, braucht nur Internet (den Image-Digest holt `pin.py` direkt von der Registry, Docker ist nicht nötig):
