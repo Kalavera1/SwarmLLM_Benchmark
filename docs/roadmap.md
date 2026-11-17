@@ -2,7 +2,7 @@
 
 Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder Phase die [Erfahrungen](erfahrungen.md) durchsehen.
 
-Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,28 $/h (Stand 15.11.2026). Die Ausgabengrenze setzt ihr als Limit im RunPod-Konto.
+Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,28 $/h (Stand 15.11.2026). Die Ausgabengrenze setzt ihr als Limit im Konto beim Anbieter.
 
 | Phase | Ziel | Kosten (geschätzt) | Status |
 |---|---|---|---|
@@ -15,8 +15,8 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 | 5 | Qwen3.8-Flash-Next | 3–5 h ≈ 10–16 $ | offen |
 | 6 | GLM-5.3-Flash | 3–5 h ≈ 10–16 $ | offen |
 | 7 | DeepSeek V4.1 Flash (Rang 2) | Google Cloud G4 ≈ 4,10–4,60 $/h Spot, eigener Server 0 € | Host offen |
-| 8 | GLM-5.3 Q3 (Rang 1, wichtigstes Modell) | wie Phase 7 | Runtime und Host offen |
-| 9 | Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime | je 3–5 h | optional |
+| 8 | GLM-5.3 Q3 (Rang 1, wichtigstes Modell), ohne Bilder | wie Phase 7 | Runtime und Host offen |
+| 9 | Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime; Qwen4, sobald Gewichte offen sind | je 3–5 h | optional |
 | 10 | Auswertung | 0 € | offen |
 
 ---
@@ -129,14 +129,17 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 **Vorher zu klären:**
 - **Runtime:** llama.cpp (erprobt, aber langsames Einlesen: ≈ 83 tok/s mit 2-Bit auf 2× RTX PRO 6000) oder KTransformers/SGLang (liest auf der GPU ein, für GLM-5 dokumentiert, für GLM-5.3 auf 2 Karten noch ohne Messung). Beide sind kein vLLM – das Startskript braucht dafür einen eigenen Startweg.
-- **Bildfähigkeit** von GLM-5.3 prüfen.
+- ~~Bildfähigkeit~~ geklärt: GLM-5.3 nimmt nur Text an (Z.ai-Doku), der Block `bilder` entfällt.
+- **Denken** lässt sich bei GLM-5.3 laut Unsloth nicht abschalten, nur abstufen (`reasoning_effort` low/high/max). Tempo-Messungen laufen dann mit `low`; `DENKSTUFEN` im Profil entsprechend setzen.
 - **Host** mit ≥ 384 GB RAM: Google Cloud G4 (360 GB) ist dafür knapp; eigener Server mit voll bestückten 12 Kanälen.
 
 **Wichtig:** 500k Kontext ist hier das größte Risiko. Mit llama.cpp-Tempo dauert ein 500k-Prompt über eine Stunde.
 
-## Phase 9 – Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime
+## Phase 9 – Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime, Qwen4
 
 Optional, nach Phase 8. DeepSeek V4 Flash kann keine Bilder; die Purtell-Runtime ist kein Upstream-vLLM.
+
+**Qwen4:** aufnehmen, sobald ein Modell mit offenen Gewichten erscheint, das auf 2 Karten passt (angekündigt: Qwen4-27B, -Flash). Stand 17.11.2026 gibt es nur Qwen4-Max als API-Vorschau ohne Gewichte.
 
 ## Phase 10 – Auswertung
 

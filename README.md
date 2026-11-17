@@ -84,7 +84,7 @@ Getestet wird **nur mit 2 Karten** (2× RTX PRO 6000, 192 GB VRAM). Stand: 17.11
 
 | Rang | Modell | Bilder | Passt in 2× 96 GB? | Weg | Checkpoint | Phase |
 |---|---|---|---|---|---|---|
-| **1** | **GLM-5.3** (≈ 753B) in **Q3** | prüfen | nein – Experten teils im Arbeitsspeicher | llama.cpp oder KTransformers mit CPU-Experten | Unsloth `UD-Q3_K_XL` (≈ 343 GB) | 8 |
+| **1** | **GLM-5.3** (≈ 753B) in **Q3** | **nein** – nur Text | nein – Experten teils im Arbeitsspeicher | llama.cpp oder KTransformers mit CPU-Experten | Unsloth `UD-Q3_K_XL` (≈ 343 GB) | 8 |
 | **2** | **DeepSeek V4.1 Flash** (763B) | ja | nein – Experten teils auf der CPU, Engram-Tabellen auf der NVMe | gepatchtes vLLM mit CPU-Experten (Rezept theogravity) | `diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000` (≈ 322 GiB) | 7 |
 | 3 | GLM-5.3-Flash (320B, 18B aktiv) | ja | ja | vLLM-Container von Local Inference Lab | `nvidia/GLM-5.3-Flash-FP4-Local` (≈ 166 GiB, von NVIDIA auf 2× RTX PRO 6000 validiert) | 6 |
 | 4 | Qwen3.8-Flash-Next (125B + 51B N-gram, 6B aktiv) | ja | ja, N-gram-Tabelle im Arbeitsspeicher | vLLM ≥ 0.30 (Nightly) | `Qwen/Qwen3.8-Flash-Next-FP8` | 5 |
@@ -93,6 +93,8 @@ Getestet wird **nur mit 2 Karten** (2× RTX PRO 6000, 192 GB VRAM). Stand: 17.11
 | – | DeepSeek V4 Flash (284B, 13B aktiv) | **nein** | ja, mit SM120-Patches | Karmic Kraken (`ghcr.io/local-inference-lab/vllm`) | `deepseek-ai/DeepSeek-V4-Flash-0731` | optional |
 
 **Testreihenfolge ist umgekehrt:** zuerst Rang 5 (Qwen3.8-27B, billig, prüft die ganze Kette), dann 4 und 3, zuletzt die beiden großen Modelle mit CPU-Auslagerung – sie brauchen einen Host mit viel und schnellem Arbeitsspeicher (siehe unten).
+
+**Bilder:** GLM-5.3 nimmt laut Z.ai nur Text an; sein Block `bilder` entfällt. Alle anderen Modelle der Rangfolge werden mit Bildern gemessen.
 
 ### Was die beiden wichtigsten Modelle verlangen
 

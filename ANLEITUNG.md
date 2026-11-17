@@ -205,7 +205,7 @@ Getestet wird vom billigen Referenzmodell zu den großen (Rangfolge nach Wichtig
 2. `qwen38-flash-next-fp8` (RunPod oder Vast.ai)
 3. `glm53-flash-fp4` (RunPod oder Vast.ai)
 4. `deepseek-v41-flash` – Google Cloud G4 oder eigener Server, sobald das Profil fertig ist
-5. GLM-5.3 Q3 – Google Cloud G4 oder eigener Server, sobald Runtime und Profil feststehen
+5. `glm53-q3` – Google Cloud G4 oder eigener Server, sobald Runtime und Profil feststehen; ohne Bilder (GLM-5.3 nimmt nur Text)
 
 ## Wenn etwas schiefgeht
 

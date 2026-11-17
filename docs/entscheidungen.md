@@ -4,6 +4,22 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-17 – GLM-5.3 Q3 ohne Bilder; Qwen4 noch nicht testbar
+
+**Entscheidung:**
+- **GLM-5.3 Q3 wird ohne Bilder gemessen** (`VISION=0`, Block `bilder` entfällt).
+- **Qwen4 kommt dazu, sobald es offene Gewichte gibt.** Bis dahin bleibt Qwen3.8-Flash-Next auf Rang 4 – laut vLLM-Recipe ist es die Vorschau auf die Qwen4-Architektur.
+
+**Warum:** Vorgabe des Nutzers: GLM-5.3 ohne Bilder testen, falls es keine kann, und Hinweis, dass Qwen 4 erschienen ist. Laut Z.ai nimmt GLM-5.3 nur Text an; bildfähig in der GLM-Reihe ist GLM-5.3-Flash (Rang 3). Von Qwen4 gibt es Stand 17.11.2026 nur **Qwen4-Max** als API-Vorschau (seit 11.11.2026): 2,4 Billionen Parameter, 71 Mrd. aktiv, Bilder, Gewichte nicht veröffentlicht – auf 2 Karten nicht lauffähig. Kleinere Modelle mit offenen Gewichten hat Alibaba nur „bald“ angekündigt, ohne Datum; genannt wurden Qwen4-27B, -Flash und -Plus, ohne Angaben zu Größe oder Lizenz.
+
+**Folge für den Betrieb:** Die Anforderung „Bilder“ erfüllt GLM-5.3 Q3 allein nicht. Wird es das Hauptmodell, braucht es für Bilder ein zweites Modell (z. B. GLM-5.3-Flash oder Qwen3.8-27B) – das ist eine Frage der Auswertung (Phase 10), nicht der Messung.
+
+**Nebenbei aus der Unsloth-Doku:** Bei GLM-5.3 lässt sich das Denken nicht abschalten, nur abstufen (`reasoning_effort` low/high/max). Das betrifft `DENKSTUFEN` im Profil.
+
+**Quellen (abgerufen 17.11.2026):**
+- GLM-5.3: [Z.ai: GLM-5.3 – „currently supports text-only inputs“](https://docs.z.ai/guides/llm/glm-5.3), [Hugging Face: zai-org/GLM-5.3 – Pipeline „text-generation“](https://huggingface.co/zai-org/GLM-5.3), [Unsloth: GLM-5.3 – Denken, UD-Q3_K_XL 343 GB](https://unsloth.ai/docs/models/glm-5.3), [Apidog: GLM-5.3-Flash als erstes nativ multimodales Modell der GLM-5-Reihe](https://apidog.com/blog/glm-5-3-flash-what-is/)
+- Qwen4: [Ultrathink, 16.11.2026: Qwen4-Max, 2,4T MoE, Gewichte geschlossen](https://ultrathink.ai/news/alibaba-qwen4-max-2-4t-closed-weights), [Stealthmodels, Stand 11.11.2026: Status je Qwen4-Modell](https://stealthmodels.com/qwen-4), [vLLM Recipe: Qwen3.8-Flash-Next – „Qwen4 architecture preview“](https://recipes.vllm.ai/Qwen/Qwen3.8-Flash-Next)
+
 ## 2026-11-17 – Auto-Stopp auf Vast.ai: Die Instanz löscht sich selbst
 
 **Entscheidung:** `server/im-container-starten.sh` startet auf Vast.ai einen Watchdog (`server/vast-watchdog.sh`), der die Instanz nach 90 Min. (oder `--minuten N`) über die Vast-API löscht. Er läuft in der Instanz selbst und nutzt den Key, den Vast.ai jeder Instanz nur für sie mitgibt (`CONTAINER_API_KEY`). Zeitpunkt sichtbar unter `:8001/watchdog.json`; verlängern durch neu Stellen, ein „aus“ gibt es nicht.
