@@ -202,9 +202,10 @@ Als Pull Request einreichen. Die Rohdaten jeder Anfrage liegen in `results/raw/`
 Getestet wird vom billigen Referenzmodell zu den großen (Rangfolge nach Wichtigkeit: siehe README):
 
 1. `qwen38-27b` – klein und billig, prüft die ganze Kette (RunPod)
-2. `glm53-flash-fp4` (RunPod oder Vast.ai)
-3. `deepseek-v41-flash` – Google Cloud G4 oder eigener Server, sobald das Profil fertig ist
-4. `glm53-q3` – Google Cloud G4 oder eigener Server, sobald Runtime und Profil feststehen; ohne Bilder (GLM-5.3 nimmt nur Text)
+2. `qwen38-flash-next-fp8` (RunPod oder Vast.ai)
+3. `glm53-flash-fp4` (RunPod oder Vast.ai)
+4. `deepseek-v41-flash` – Google Cloud G4 oder eigener Server, sobald das Profil fertig ist
+5. `glm53-q3` – Google Cloud G4 oder eigener Server, sobald Runtime und Profil feststehen; ohne Bilder (GLM-5.3 nimmt nur Text)
 
 ## Wenn etwas schiefgeht
 
