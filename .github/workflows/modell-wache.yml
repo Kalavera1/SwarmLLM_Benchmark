@@ -1,0 +1,56 @@
+# Modell-Wache: prüft täglich, ob Modelle aus der Beobachtungsliste
+# (profiles/beobachten.txt) auf Hugging Face erschienen sind, und legt dann
+# ein Issue mit Größe und Vorprüfung an. So kommt z. B. Qwen4 auf den Tisch,
+# sobald offene Gewichte da sind – ohne dass jemand nachsehen muss.
+# Braucht keine Zugangsdaten außer dem automatischen Token des Laufs.
+
+name: Modell-Wache
+
+# ---------------------------------------------------------------------------
+# Auslöser: täglich 05:23 UTC, und von Hand unter Actions → Modell-Wache →
+# Run workflow (läuft erst, wenn diese Datei auf main liegt)
+# ---------------------------------------------------------------------------
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+
+# ---------------------------------------------------------------------------
+# Rechte: Repo nur lesen; Issues schreiben, um Funde zu melden
+# ---------------------------------------------------------------------------
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  wache:
+    name: Neue Modelle suchen
+    runs-on: ubuntu-24.04
+    steps:
+      # Repo holen; ohne gespeicherte Zugangsdaten, gepusht wird nichts
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Frühere Meldungen sammeln (offene und geschlossene Issues mit dem Label),
+      # damit kein Repo zweimal gemeldet wird. REST-API: liefert ohne Label einfach nichts.
+      - name: Bisherige Meldungen lesen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/${GITHUB_REPOSITORY}/issues?labels=modell-wache&state=all&per_page=100" --paginate --jq '.[].body' > bekannt.txt
+
+      # Hugging Face durchsuchen; schreibt funde.md nur, wenn es etwas Neues gibt
+      - name: Hugging Face durchsuchen
+        run: python3 profiles/wache.py --bekannt bekannt.txt --markdown funde.md
+
+      # Bei Funden ein Issue anlegen (Label wird beim ersten Mal erzeugt)
+      - name: Issue anlegen, wenn etwas Neues da ist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f funde.md ]; then
+            gh label create modell-wache --color 1d76db --description "Neue Modelle aus der Beobachtungsliste" --force
+            gh issue create --title "Modell-Wache: neue Modelle ($(date -u +%F))" --label modell-wache --body-file funde.md
+          else
+            echo "Nichts Neues."
+          fi

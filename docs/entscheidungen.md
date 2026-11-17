@@ -4,19 +4,45 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
-## 2026-11-17 – Qwen3.8-Flash-Next gestrichen, GLM-5.3 Q3 ohne Bilder
+## 2026-11-17 – Neue Modelle aufnehmen: `neu.py` und Modell-Wache; Qwen4 auf 2 Karten
 
 **Entscheidung:**
-- **Qwen3.8-Flash-Next** (bisher Rang 4) fliegt aus der Auswahl; Profil `qwen38-flash-next-fp8` gelöscht, Phase 5 entfällt. Die Rangfolge ist jetzt: 1. GLM-5.3 Q3, 2. DeepSeek V4.1 Flash, 3. GLM-5.3-Flash, 4. Qwen3.8-27B als Referenz.
-- **GLM-5.3 Q3 wird ohne Bilder gemessen** (`VISION=0`, Block `bilder` entfällt).
+- **`profiles/neu.py`** legt ein neues Modell als Profil-Entwurf an. Vorher fragt es Hugging Face nach Größe, Bildfähigkeit und Kontext und rechnet grob, ob die Gewichte in 2× 96 GB passen: gut (≤ 75 %, Rest für KV-Cache), knapp (≤ 95 %) oder nur mit Teilen im Arbeitsspeicher (dann geschätzter RAM-Bedarf). Mit `--wie <profil>` übernimmt es die Startparameter eines ähnlichen Modells.
+- **Modell-Wache:** `profiles/beobachten.txt` listet Modelle, auf die wir warten. Die GitHub Action `modell-wache.yml` sucht täglich mit `profiles/wache.py` auf Hugging Face und legt für neue Repos ein Issue an. Schon gemeldete Repos und Repos aus Profilen kommen nicht noch einmal.
+- **Qwen4** steht als Phase 5b fest im Plan und als erster Eintrag auf der Beobachtungsliste (Autoren `Qwen` und `nvidia`).
 
-**Warum:** Vorgabe des Nutzers: „Qwen 4 ist auch raus“ (gelesen als Rang 4, Qwen3.8-Flash-Next; das Referenzmodell Qwen3.8-27B bleibt) und GLM-5.3 ohne Bilder testen, falls es keine kann. Laut Z.ai nimmt GLM-5.3 nur Text an. Bildfähig in der GLM-Reihe ist GLM-5.3-Flash (Rang 3).
+**Warum:** Vorgabe des Nutzers: Qwen4 aufnehmen, sobald es da ist, und generell neue Modelle einfach in den Test aufnehmen können. Die Wache braucht keine Zugangsdaten außer dem automatischen Token des Laufs. Sie läuft auf GitHub und nicht im Container dieser Sitzung, denn der erreicht Hugging Face nicht. Im öffentlichen Repo kostet sie nichts; in einem privaten Repo verbraucht sie etwa eine Actions-Minute am Tag.
+
+**Qwen4 auf 2× RTX PRO 6000 – Einschätzung (Stand 17.11.2026):**
+
+| Modell | Stand | Passt auf 2 Karten? | Weg |
+|---|---|---|---|
+| Qwen4-27B | als offenes Modell angekündigt, nicht erschienen; Architektur offiziell offen (Kernel-Code nennt es „dense“, unbestätigt) | ja, falls dicht: 27 Mrd. Parameter ≈ 54 GB in BF16, ≈ 27 GB in FP8 (2 bzw. 1 Byte je Parameter, eigene Rechnung) – passt sogar auf eine Karte | wie Qwen3.8-27B (vLLM, Data-Parallel 2) |
+| Qwen4-Flash | genannt; Größe und Lizenz offen | offen. Der Vorläufer Qwen3.8-Flash-Next (125B + 51B N-gram-Tabelle) läuft in FP8 auf 2 Karten, mit der Tabelle im Arbeitsspeicher | wie Qwen3.8-Flash-Next |
+| Qwen4-Plus | genannt; bisher bei Qwen nur per API | voraussichtlich keine Gewichte | – |
+| Qwen4-Max | API-Vorschau seit 11.11.2026; 2,4 Billionen Parameter, 71 Mrd. aktiv; Gewichte geschlossen | nein: selbst mit 4 Bit ≈ 1,2 TB (eigene Rechnung) | – |
+
+**Software:** Qwen3.8-Flash-Next ist laut vLLM-Recipe die Vorschau auf die Qwen4-Architektur. Diese Architektur heißt „Qwen4Exp“ (Hugging-Face-Konfiguration `Qwen4ExpTextConfig`); vLLM betreibt sie laut Recipe, llama.cpp seit Ende August. Bauen die offenen Qwen4-Modelle darauf auf, laufen sie zum Start wahrscheinlich schon – bestätigt ist das nicht. Die Messung von Qwen3.8-Flash-Next in Phase 5 zeigt vorab, wie diese Architektur auf unseren Karten läuft.
+
+**Quellen (abgerufen 17.11.2026):** [Ultrathink, 16.11.2026: Qwen4-Max](https://ultrathink.ai/news/alibaba-qwen4-max-2-4t-closed-weights), [Stealthmodels, Stand 11.11.2026: Status je Qwen4-Modell, „Qwen4-27B dense“ im Kernel-Code](https://stealthmodels.com/qwen-4), [Newszest, 03.11.2026: vier Modelle genannt, keine Gewichte](https://www.newszest.in/2026/11/qwen4-4-models-named-0-open-weights.html), [Yotta Labs, 16.11.2026: Qwen4-27B angekündigt, nicht erschienen](https://www.yottalabs.ai/post/qwen-4-27b-release-date-specs-hardware-what-is-known-2026), [vLLM Recipe: Qwen3.8-Flash-Next – „Qwen4 architecture preview“](https://recipes.vllm.ai/Qwen/Qwen3.8-Flash-Next), [vLLM PR #61607: Qwen4Exp (Qwen3.8-Flash-Next)](https://github.com/vllm-project/vllm/pull/61607), [Startup Fortune, 24.10.2026: llama.cpp PR #27742 „qwen4exp“ gemergt](https://startupfortune.com/github-pull-requests-point-to-alibabas-next-open-qwen-model-nearing-release/)
+
+## 2026-11-17 – GLM-5.3 Q3 ohne Bilder; Qwen4 noch nicht testbar
+
+**Entscheidung:**
+- **GLM-5.3 Q3 wird ohne Bilder gemessen** (`VISION=0`, Block `bilder` entfällt).
+- **Qwen4 kommt dazu, sobald es offene Gewichte gibt.** Bis dahin bleibt Qwen3.8-Flash-Next auf Rang 4 – laut vLLM-Recipe ist es die Vorschau auf die Qwen4-Architektur.
+
+**Warum:** Vorgabe des Nutzers: GLM-5.3 ohne Bilder testen, falls es keine kann, und Hinweis, dass Qwen 4 erschienen ist. Laut Z.ai nimmt GLM-5.3 nur Text an; bildfähig in der GLM-Reihe ist GLM-5.3-Flash (Rang 3). Von Qwen4 gibt es Stand 17.11.2026 nur **Qwen4-Max** als API-Vorschau (seit 11.11.2026): 2,4 Billionen Parameter, 71 Mrd. aktiv, Bilder, Gewichte nicht veröffentlicht – auf 2 Karten nicht lauffähig. Kleinere Modelle mit offenen Gewichten hat Alibaba nur „bald“ angekündigt, ohne Datum; genannt wurden Qwen4-27B, -Flash und -Plus, ohne Angaben zu Größe oder Lizenz.
+
+**Korrektur:** Eine erste Fassung dieses Eintrags (PR #20) hatte Qwen3.8-Flash-Next gestrichen – „Qwen 4 ist auch raus“ war als „fliegt raus“ gelesen statt als „ist erschienen“. Mit PR #21 zurückgenommen; Profil und Rang 4 sind wieder da.
 
 **Folge für den Betrieb:** Die Anforderung „Bilder“ erfüllt GLM-5.3 Q3 allein nicht. Wird es das Hauptmodell, braucht es für Bilder ein zweites Modell (z. B. GLM-5.3-Flash oder Qwen3.8-27B) – das ist eine Frage der Auswertung (Phase 10), nicht der Messung.
 
 **Nebenbei aus der Unsloth-Doku:** Bei GLM-5.3 lässt sich das Denken nicht abschalten, nur abstufen (`reasoning_effort` low/high/max). Das betrifft `DENKSTUFEN` im Profil.
 
-**Quellen (abgerufen 17.11.2026):** [Z.ai: GLM-5.3 – „currently supports text-only inputs“](https://docs.z.ai/guides/llm/glm-5.3), [Hugging Face: zai-org/GLM-5.3 – Pipeline „text-generation“](https://huggingface.co/zai-org/GLM-5.3), [Unsloth: GLM-5.3 – Denken, UD-Q3_K_XL 343 GB](https://unsloth.ai/docs/models/glm-5.3), [Apidog: GLM-5.3-Flash als erstes nativ multimodales Modell der GLM-5-Reihe](https://apidog.com/blog/glm-5-3-flash-what-is/)
+**Quellen (abgerufen 17.11.2026):**
+- GLM-5.3: [Z.ai: GLM-5.3 – „currently supports text-only inputs“](https://docs.z.ai/guides/llm/glm-5.3), [Hugging Face: zai-org/GLM-5.3 – Pipeline „text-generation“](https://huggingface.co/zai-org/GLM-5.3), [Unsloth: GLM-5.3 – Denken, UD-Q3_K_XL 343 GB](https://unsloth.ai/docs/models/glm-5.3), [Apidog: GLM-5.3-Flash als erstes nativ multimodales Modell der GLM-5-Reihe](https://apidog.com/blog/glm-5-3-flash-what-is/)
+- Qwen4: [Ultrathink, 16.11.2026: Qwen4-Max, 2,4T MoE, Gewichte geschlossen](https://ultrathink.ai/news/alibaba-qwen4-max-2-4t-closed-weights), [Stealthmodels, Stand 11.11.2026: Status je Qwen4-Modell](https://stealthmodels.com/qwen-4), [vLLM Recipe: Qwen3.8-Flash-Next – „Qwen4 architecture preview“](https://recipes.vllm.ai/Qwen/Qwen3.8-Flash-Next)
 
 ## 2026-11-17 – Auto-Stopp auf Vast.ai: Die Instanz löscht sich selbst
 

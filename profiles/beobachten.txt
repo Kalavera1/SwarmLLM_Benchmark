@@ -1,0 +1,9 @@
+# Beobachtungsliste der Modell-Wache (profiles/wache.py, täglich als GitHub Action).
+# Je Zeile: <Hugging-Face-Autor> <Suchbegriff im Repo-Namen>   # warum
+# Neue Repos, die noch in keinem Profil stehen, werden als Issue gemeldet.
+# Neue Kandidaten einfach als Zeile ergänzen und per Pull Request einreichen.
+
+# --- Qwen4: aufnehmen, sobald offene Gewichte erscheinen (Stand 17.11.2026 nur
+#     Qwen4-Max als API-Vorschau). NVIDIA veröffentlicht oft NVFP4-Fassungen.
+Qwen Qwen4
+nvidia Qwen4
