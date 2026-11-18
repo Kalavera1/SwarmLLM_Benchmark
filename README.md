@@ -2,7 +2,7 @@
 
 Testprojekt: große Open-Weight-Modelle mit vLLM auf **2× NVIDIA RTX PRO 6000 Blackwell** (je 96 GB, SM120, kein NVLink) betreiben, vergleichen und vermessen – gemietet in der Cloud oder auf einem eigenen Server.
 
-**Maschinenunabhängig:** Gesteuert wird von einem beliebigen Rechner mit Python 3.11 (Laptop, PC mit WSL, Server). Gemessen wird gegen einen beliebigen GPU-Server mit Docker oder einen RunPod-Pod. Alle eigenen Werte stehen in einer Datei, `benchmark.conf`.
+**Maschinenunabhängig:** Gesteuert wird von einem beliebigen Rechner mit Python 3.11 (Laptop, PC mit WSL, Server). Gemessen wird gegen einen beliebigen GPU-Server mit Docker oder einen RunPod-Pod; **Hauptweg ist eine Google-Cloud-VM G4**. Alle eigenen Werte stehen in einer Datei, `benchmark.conf`.
 
 **Loslegen:** [ANLEITUNG.md](ANLEITUNG.md) – Schritt für Schritt vom leeren Rechner bis zur Vergleichstabelle.
 
@@ -59,8 +59,8 @@ flowchart LR
 
 | Weg | Start | Wofür |
 |---|---|---|
-| RunPod | `python3 runpod/rp.py up <profil>` (automatisch, mit Kostenanzeige und Watchdog) | Modelle komplett im VRAM (Qwen, GLM-5.3-Flash) |
-| Google Cloud G4 | VM anlegen, dann `server/lokal-starten.sh <profil>` | wenn die CPU zählt: AMD EPYC Turin wie der Zielserver |
+| **Google Cloud G4 – Hauptweg** | VM in der Cloud Shell anlegen (Flex-Start, löscht sich nach Ablauf), dann `server/lokal-starten.sh <profil>` | alle Modelle; AMD EPYC Turin wie der Zielserver |
+| RunPod | `python3 runpod/rp.py up <profil>` (automatisch, mit Kostenanzeige und Watchdog) | Ausweichweg für Modelle komplett im VRAM |
 | Vast.ai | Instanz mit vLLM-Image anlegen, dann `server/im-container-starten.sh <profil>` (mit Watchdog) | Max-Q-Karten wie der Zielserver; CPU-Modell vor dem Mieten sichtbar |
 | Eigener Server | `server/lokal-starten.sh <profil>` | endgültige Messung auf der Zielhardware |
 

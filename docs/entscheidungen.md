@@ -4,6 +4,34 @@ Kurz festgehalten: was entschieden wurde, warum, und wo es herkommt. Neue Eintr�
 
 ---
 
+## 2026-11-18 – Google Cloud G4 ist der Hauptweg; Flex-Start statt Spot
+
+**Entscheidung:**
+- **Alle Messungen laufen auf Google Cloud G4** (`g4-standard-96`: 2× RTX PRO 6000, 96 vCPU AMD EPYC Turin, 360 GB RAM), Region `europe-west4`. RunPod und Vast.ai bleiben Ausweichwege, der eigene Server ist für die Endmessung.
+- **Bezugsmodell Flex-Start:** wartet höchstens 2 Stunden auf Karten, wird während der Laufzeit nicht unterbrochen und endet nach `--max-run-duration` mit Löschen. Das erfüllt Regel 5 ohne eigenen Watchdog. Standard 4 Stunden, für DeepSeek V4.1 Flash und GLM-5.3 Q3 10 Stunden.
+- **VM per `gcloud` in der Cloud Shell:**
+  - Image „Deep Learning VM“ `common-cu129-ubuntu-2404-nvidia-580` mit `install-nvidia-driver=True`
+  - Bootlaufwerk Hyperdisk Balanced, 600 GB (G4 kann kein Persistent Disk)
+  - Firewall für 8000/8001 nur von der IP des Laptops
+- **Kostenrahmen:** 30–55 Stunden × 4,95 $ ≈ 150–275 $; Freigabe beim Einkauf 500 €. Die Stunden sind eigene Schätzung (Tabelle in der Roadmap plus 50 % Puffer). 4,95 $ = Flex-Start-Listenpreis 4,50 $ plus 10 %, weil der reguläre Preis in `europe-west4` 10 % über dem US-Preis liegt (9,90 statt 9,00 $).
+
+**Warum:** Entscheidung des Nutzers. Flex-Start statt Spot: Spot kann laut Google jederzeit abgebrochen werden, dann ist ein Messlauf halb verloren; der Preisunterschied ist klein (Spot `europe-west4` 4,10 $/h). `europe-west4` ist im Spot-Preis die günstigste EU-Region mit G4 und hat drei Zonen dafür.
+
+**Noch nicht geprüft:**
+- Die G4-Schritte sind nicht selbst durchgespielt.
+- Ob das Deep-Learning-Image Docker und das NVIDIA Container Toolkit mitbringt, steht nicht in der gelesenen Doku. Die Anleitung prüft es mit `docker run --gpus all … nvidia-smi`.
+- Einen Flex-Start-Preis für Europa nennt Google nicht; laut Google werden die Flex-Start-Preise im November 2026 aktualisiert.
+- Ob G4 auch das globale Kontingent `GPUS_ALL_REGIONS` braucht, sagt die gelesene Doku nicht.
+- Ganz neue Konten bekommen GPU-Kontingent nicht immer; deshalb lieber ein vorhandenes Firmenkonto nutzen.
+
+**Quellen (abgerufen 18.11.2026):**
+- Preise: [gcloud-compute.com: g4-standard-96 je Region, Stand 15.11.2026](https://gcloud-compute.com/g4-standard-96.html), [Google: beschleunigungsoptimierte VMs](https://cloud.google.com/products/compute/pricing/accelerator-optimized?hl=en), [Google: Flex-Start-Preise](https://cloud.google.com/products/dws/pricing?hl=de)
+- Bezugsmodelle: [Google: Flex-Start bis 7 Tage, nicht unterbrechbar; Spot jederzeit](https://docs.cloud.google.com/ai-hypercomputer/docs/consumption-models?hl=en), [Google: Laufzeit begrenzen](https://docs.cloud.google.com/compute/docs/instances/limit-vm-runtime)
+- VM: [Google: G4-VM anlegen – Hyperdisk, kein Persistent Disk, Flex-Start-Befehl](https://docs.cloud.google.com/ai-hypercomputer/docs/create/create-vm-g4), [Google: Deep-Learning-Images mit Treiber 580](https://docs.cloud.google.com/deep-learning-vm/docs/images), [Google: `install-nvidia-driver=True`](https://docs.cloud.google.com/deep-learning-vm/docs/cli)
+- Standorte und Kontingent: [Google: GPU-Standorte, Stand 28.10.2026](https://docs.cloud.google.com/compute/docs/gpus/gpu-regions-zones?hl=de), [Google: Kontingente für RTX PRO 6000](https://docs.cloud.google.com/confidential-computing/confidential-vm/docs/gpu-quota-requirement)
+- Abrechnung: [Google: Vertragspartner je Land](https://cloud.google.com/terms/google-entity?hl=fr), [Google-Blog: Budgets warnen, begrenzen nicht](https://cloud.google.com/blog/topics/developers-practitioners/protect-your-google-cloud-spending-budgets)
+- Erfahrungsberichte: [keine GPUs im Testkonto](https://discuss.google.dev/t/cant-access-gpus-on-a-compute-engine-with-a-personal-account/145823/2), [GPU-Kontingent bei neuem Konto abgelehnt](https://discuss.google.dev/t/cloud-run-l4-gpu-quota-stays-0-on-a-paid-account-auto-grant-never-fires-even-in-a-brand-new-project/393926)
+
 ## 2026-11-17 – Neue Modelle aufnehmen: `neu.py` und Modell-Wache; Qwen4 auf 2 Karten
 
 **Entscheidung:**

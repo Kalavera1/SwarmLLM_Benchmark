@@ -46,16 +46,19 @@ Zwei Hauptwerkzeuge, beide startest du auf dem **[Laptop]**:
 | `server/vast-watchdog.sh` | Auto-Stopp auf Vast.ai: Die Instanz löscht sich nach Ablauf selbst; anzeigen oder verlängern | auf dem [Server], bei Vast.ai |
 
 Ein Lauf als Kette:
+- **Google Cloud G4 (Hauptweg):** `pin.py` (einmal) → VM in der Cloud Shell anlegen (`gcloud compute instances create …`) → `lokal-starten.sh` → `bench run alle` → VM löschen
 - **RunPod:** `pin.py` (einmal) → `rp.py up` → `rp.py warten` → `rp.py check` → `bench run alle` → `rp.py down`
-- **Google Cloud, eigener Server:** `pin.py` (einmal) → VM bereitstellen → `lokal-starten.sh` → `bench run alle` → `lokal-starten.sh … stopp` bzw. VM löschen
+- **Eigener Server:** `pin.py` (einmal) → `lokal-starten.sh` → `bench run alle` → `lokal-starten.sh … stopp`
 - **Vast.ai:** `pin.py` (einmal) → Instanz mit vLLM-Image anlegen → `im-container-starten.sh` (startet auch den Watchdog) → `bench run alle` → Instanz löschen
 
 ## GPU-Server wählen
 
+**Hauptweg ist Google Cloud G4** (Entscheidung vom 18.11.2026). Die anderen Wege bleiben als Ausweichmöglichkeit.
+
 | Anbieter | Anleitung | Wofür | Hardware | Auto-Stopp |
 |---|---|---|---|---|
-| **RunPod** | [anleitung/runpod.md](anleitung/runpod.md) | Modelle komplett im VRAM (Qwen, GLM-5.3-Flash) | RTX PRO 6000, CPU nicht wählbar | Watchdog von `rp.py` auf dem Laptop |
-| **Google Cloud G4** | [anleitung/google-cloud.md](anleitung/google-cloud.md) | wenn die CPU zählt (GLM-5.3 Q3, DeepSeek V4.1 Flash) | 2× RTX PRO 6000 + AMD EPYC Turin | maximale VM-Laufzeit |
+| **Google Cloud G4 – Hauptweg** | [anleitung/google-cloud.md](anleitung/google-cloud.md) | alle Modelle; Pflicht, wenn die CPU zählt (GLM-5.3 Q3, DeepSeek V4.1 Flash) | 2× RTX PRO 6000 + AMD EPYC Turin | maximale VM-Laufzeit (Flex-Start) |
+| **RunPod** | [anleitung/runpod.md](anleitung/runpod.md) | Ausweichweg für Modelle komplett im VRAM | RTX PRO 6000, CPU nicht wählbar | Watchdog von `rp.py` auf dem Laptop |
 | **Vast.ai** | [anleitung/vast-ai.md](anleitung/vast-ai.md) | Max-Q-Karten wie der Zielserver | CPU vor dem Mieten sichtbar | Watchdog in der Instanz löscht sie selbst |
 | **Eigener Server** | [anleitung/eigener-server.md](anleitung/eigener-server.md) | endgültige Messung auf der Zielhardware | EPYC 9745 + 2× Max-Q | nicht nötig |
 
@@ -203,11 +206,13 @@ Als Pull Request einreichen. Die Rohdaten jeder Anfrage liegen in `results/raw/`
 
 Getestet wird vom billigen Referenzmodell zu den großen (Rangfolge nach Wichtigkeit: siehe README):
 
-1. `qwen38-27b` – klein und billig, prüft die ganze Kette (RunPod)
-2. `qwen38-flash-next-fp8` (RunPod oder Vast.ai)
-3. `glm53-flash-fp4` (RunPod oder Vast.ai)
-4. `deepseek-v41-flash` – Google Cloud G4 oder eigener Server, sobald das Profil fertig ist
-5. `glm53-q3` – Google Cloud G4 oder eigener Server, sobald Runtime und Profil feststehen; ohne Bilder (GLM-5.3 nimmt nur Text)
+Alle auf Google Cloud G4; die letzten beiden später auch auf dem eigenen Server.
+
+1. `qwen38-27b` – klein und billig, prüft die ganze Kette
+2. `qwen38-flash-next-fp8`
+3. `glm53-flash-fp4`
+4. `deepseek-v41-flash` – sobald das Profil fertig ist; `--max-run-duration=10h`
+5. `glm53-q3` – sobald Runtime und Profil feststehen; ohne Bilder (GLM-5.3 nimmt nur Text); `--max-run-duration=10h`
 
 Neue Modelle (z. B. Qwen4, sobald es offene Gewichte gibt) kommen über den nächsten Abschnitt dazu.
 
