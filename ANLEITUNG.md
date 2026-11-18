@@ -38,22 +38,27 @@ Zwei Hauptwerkzeuge, beide startest du auf dem **[Laptop]**:
 | Skript | Aufgabe | Wo es läuft |
 |---|---|---|
 | `profiles/pin.py` | Modell-Revision und Image-Digest ins Profil eintragen | [Laptop], einmal pro Modell |
+| `profiles/neu.py` | neues Modell als Profil-Entwurf anlegen, mit Vorprüfung, ob es auf 2 Karten passt | [Laptop], einmal pro neuem Modell |
+| `profiles/wache.py` | Modell-Wache: sucht auf Hugging Face nach Modellen aus `profiles/beobachten.txt` | täglich auf GitHub, automatisch; von Hand auf dem [Laptop] |
 | `server/start-im-container.sh` | Host prüfen, Modell laden, vLLM starten | im Container auf dem [Server], automatisch – du rufst es nie selbst auf |
 | `server/lokal-starten.sh` | startet den Container mit dem Startskript per `docker run` | auf dem [Server], bei Google Cloud und eigenem Server |
 | `server/im-container-starten.sh` | startet das Startskript direkt im schon laufenden Container und auf Vast.ai den Watchdog | auf dem [Server], bei Vast.ai |
 | `server/vast-watchdog.sh` | Auto-Stopp auf Vast.ai: Die Instanz löscht sich nach Ablauf selbst; anzeigen oder verlängern | auf dem [Server], bei Vast.ai |
 
 Ein Lauf als Kette:
+- **Google Cloud G4 (Hauptweg):** `pin.py` (einmal) → VM in der Cloud Shell anlegen (`gcloud compute instances create …`) → `lokal-starten.sh` → `bench run alle` → VM löschen
 - **RunPod:** `pin.py` (einmal) → `rp.py up` → `rp.py warten` → `rp.py check` → `bench run alle` → `rp.py down`
-- **Google Cloud, eigener Server:** `pin.py` (einmal) → VM bereitstellen → `lokal-starten.sh` → `bench run alle` → `lokal-starten.sh … stopp` bzw. VM löschen
+- **Eigener Server:** `pin.py` (einmal) → `lokal-starten.sh` → `bench run alle` → `lokal-starten.sh … stopp`
 - **Vast.ai:** `pin.py` (einmal) → Instanz mit vLLM-Image anlegen → `im-container-starten.sh` (startet auch den Watchdog) → `bench run alle` → Instanz löschen
 
 ## GPU-Server wählen
 
+**Hauptweg ist Google Cloud G4** (Entscheidung vom 18.11.2026). Die anderen Wege bleiben als Ausweichmöglichkeit.
+
 | Anbieter | Anleitung | Wofür | Hardware | Auto-Stopp |
 |---|---|---|---|---|
-| **RunPod** | [anleitung/runpod.md](anleitung/runpod.md) | Modelle komplett im VRAM (Qwen, GLM-5.3-Flash) | RTX PRO 6000, CPU nicht wählbar | Watchdog von `rp.py` auf dem Laptop |
-| **Google Cloud G4** | [anleitung/google-cloud.md](anleitung/google-cloud.md) | wenn die CPU zählt (GLM-5.3 Q3, DeepSeek V4.1 Flash) | 2× RTX PRO 6000 + AMD EPYC Turin | maximale VM-Laufzeit |
+| **Google Cloud G4 – Hauptweg** | [anleitung/google-cloud.md](anleitung/google-cloud.md) | alle Modelle; Pflicht, wenn die CPU zählt (GLM-5.3 Q3, DeepSeek V4.1 Flash) | 2× RTX PRO 6000 + AMD EPYC Turin | maximale VM-Laufzeit (Flex-Start) |
+| **RunPod** | [anleitung/runpod.md](anleitung/runpod.md) | Ausweichweg für Modelle komplett im VRAM | RTX PRO 6000, CPU nicht wählbar | Watchdog von `rp.py` auf dem Laptop |
 | **Vast.ai** | [anleitung/vast-ai.md](anleitung/vast-ai.md) | Max-Q-Karten wie der Zielserver | CPU vor dem Mieten sichtbar | Watchdog in der Instanz löscht sie selbst |
 | **Eigener Server** | [anleitung/eigener-server.md](anleitung/eigener-server.md) | endgültige Messung auf der Zielhardware | EPYC 9745 + 2× Max-Q | nicht nötig |
 
@@ -201,10 +206,49 @@ Als Pull Request einreichen. Die Rohdaten jeder Anfrage liegen in `results/raw/`
 
 Getestet wird vom billigen Referenzmodell zu den großen (Rangfolge nach Wichtigkeit: siehe README):
 
-1. `qwen38-27b` – klein und billig, prüft die ganze Kette (RunPod)
-2. `glm53-flash-fp4` (RunPod oder Vast.ai)
-3. `deepseek-v41-flash` – Google Cloud G4 oder eigener Server, sobald das Profil fertig ist
-4. `glm53-q3` – Google Cloud G4 oder eigener Server, sobald Runtime und Profil feststehen; ohne Bilder (GLM-5.3 nimmt nur Text)
+Alle auf Google Cloud G4; die letzten beiden später auch auf dem eigenen Server.
+
+1. `qwen38-27b` – klein und billig, prüft die ganze Kette
+2. `qwen38-flash-next-fp8`
+3. `glm53-flash-fp4`
+4. `deepseek-v41-flash` – sobald das Profil fertig ist; `--max-run-duration=10h`
+5. `glm53-q3` – sobald Runtime und Profil feststehen; ohne Bilder (GLM-5.3 nimmt nur Text); `--max-run-duration=10h`
+
+Neue Modelle (z. B. Qwen4, sobald es offene Gewichte gibt) kommen über den nächsten Abschnitt dazu.
+
+## Neues Modell aufnehmen
+
+Jedes Modell ist ein Profil in `profiles/<name>/profile.env`. Ein neues Modell aufnehmen heißt: Profil anlegen, prüfen, pinnen, dann messen wie alle anderen.
+
+### Woher du von neuen Modellen erfährst [Web]
+
+Die **Modell-Wache** (GitHub Action, täglich) sucht auf Hugging Face nach allem, was in `profiles/beobachten.txt` steht – zurzeit Qwen4. Findet sie ein Repo, das noch in keinem Profil steht, legt sie im Repo ein **Issue** „Modell-Wache: neue Modelle“ an, mit Größe und Vorprüfung. Wer das Repo auf GitHub mit *Watch → All Activity* beobachtet, bekommt dazu eine Benachrichtigung.
+
+Weitere Kandidaten beobachten: eine Zeile `<Autor> <Suchbegriff>` in `profiles/beobachten.txt` ergänzen und per Pull Request einreichen. Von Hand prüfen geht auch: `python3 profiles/wache.py`.
+
+### 1. Vorprüfung [Laptop]
+
+```bash
+python3 profiles/neu.py qwen4-27b --quelle Qwen/Qwen4-27B --trocken
+```
+
+**Was passiert:** `neu.py` fragt Hugging Face nach Dateigrößen, Bildfähigkeit und Kontextlänge und rechnet grob, ob die Gewichte in 2× 96 GB passen – mit Platz für den KV-Cache, nur knapp, oder nur mit Teilen im Arbeitsspeicher (dann mit geschätztem RAM-Bedarf). Es schreibt nichts. Bei GGUF-Repos mit vielen Quantisierungen nur eine zählen: `--auswahl UD-Q3_K_XL`.
+
+### 2. Profil anlegen [Laptop]
+
+```bash
+python3 profiles/neu.py qwen4-27b --quelle Qwen/Qwen4-27B --wie qwen38-27b
+```
+
+**Was passiert:** Das Profil entsteht als **Entwurf** (startet noch nicht). Mit `--wie <profil>` übernimmt es die Startparameter eines ähnlichen Modells – für einen Nachfolger meist der Vorgänger. Ohne `--wie` kommt eine schlichte Vorlage. Oben in der Datei stehen die Vorprüfung und die nächsten Schritte.
+
+### 3. Prüfen, pinnen, freigeben [Laptop]
+
+1. Startparameter (`SERVE_ARGS`, `SPEC_CONFIG`, `SERVE_ENV`, `VLLM_IMAGE_QUELLE`) mit dem vLLM-Recipe des Modells abgleichen (recipes.vllm.ai) und die Quelle in den Kopfkommentar schreiben.
+2. Probelauf und Pinnen wie in [Teil 2](#teil-2--modell-vorbereiten-kostenlos-einmal-pro-modell).
+3. `PROFIL_STATUS=bereit` setzen, das Modell in die Rangfolge der README eintragen, Pull Request.
+
+Danach messen wie in [Teil 3](#teil-3--messen-laptop). Die Auswertung (`python3 -m bench auswertung`) nimmt jedes Profil mit Ergebnissen automatisch in die Vergleichstabelle auf.
 
 ## Wenn etwas schiefgeht
 

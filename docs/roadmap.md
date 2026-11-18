@@ -2,7 +2,7 @@
 
 Jede Phase endet mit einem Review. Erst danach beginnt die nächste. Vor jeder Phase die [Erfahrungen](erfahrungen.md) durchsehen.
 
-Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,28 $/h (Stand 15.11.2026). Die Ausgabengrenze setzt ihr als Limit im Konto beim Anbieter.
+Kosten-Schätzungen für GPU-Phasen: Google Cloud G4 (`g4-standard-96`, Flex-Start), gerechnet mit 4,95 $/h (Stand 18.11.2026, Herleitung im [Entscheidungslog](entscheidungen.md)). Stunden einschließlich Start und Download. Die harte Ausgabengrenze ist das Limit der Firmenkarte; das Google-Budget warnt nur.
 
 | Phase | Ziel | Kosten (geschätzt) | Status |
 |---|---|---|---|
@@ -11,11 +11,12 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 | 1 | Optional: Chat-Stack (LiteLLM, OpenWebUI) | 0 € | optional, für Messungen nicht nötig; Test offen |
 | 2 | Testsuite | 0 € | in Review |
 | 3 | Startskripte, RunPod-Steuerung, Modellprofile, `benchmark.conf` | 0 € | in Review |
-| 4 | Erster GPU-Test mit Qwen3.8-27B | ca. 1 h ≈ 4 $ | offen |
-| 5 | ~~Qwen3.8-Flash-Next~~ | – | entfällt (17.11.2026) |
-| 6 | GLM-5.3-Flash | 3–5 h ≈ 10–16 $ | offen |
-| 7 | DeepSeek V4.1 Flash (Rang 2) | Google Cloud G4 ≈ 4,10–4,60 $/h Spot, eigener Server 0 € | Host offen |
-| 8 | GLM-5.3 Q3 (Rang 1, wichtigstes Modell), ohne Bilder | wie Phase 7 | Runtime und Host offen |
+| 4 | Erster GPU-Test mit Qwen3.8-27B | 1–2 h ≈ 5–10 $ | offen |
+| 5 | Qwen3.8-Flash-Next | 3–5 h ≈ 15–25 $ | offen |
+| 5b | Qwen4 (offene Modelle, z. B. Qwen4-27B, Qwen4-Flash) | je 1–5 h ≈ 5–25 $ | wartet auf Veröffentlichung; die Modell-Wache meldet sie |
+| 6 | GLM-5.3-Flash | 3–5 h ≈ 15–25 $ | offen |
+| 7 | DeepSeek V4.1 Flash (Rang 2) | 6–10 h ≈ 30–50 $; eigener Server 0 € | Profil offen |
+| 8 | GLM-5.3 Q3 (Rang 1, wichtigstes Modell), ohne Bilder | 6–10 h ≈ 30–50 $; eigener Server 0 € | Runtime offen |
 | 9 | Optional: DeepSeek V4 Flash, GLM-5.3-Flash über Purtell-Runtime | je 3–5 h | optional |
 | 10 | Auswertung | 0 € | offen |
 
@@ -77,6 +78,7 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 - `server/start-im-container.sh`: ein Startskript für alle GPU-Server (RunPod, Cloud-VM, Vast.ai, eigener Server) mit Host-Check (P2P, CPU, RAM-Bandbreite, Power-Limit); `server/lokal-starten.sh` für Rechner mit Docker.
 - `benchmark.conf` für alle eigenen Werte und `ANLEITUNG.md` für den Ablauf von einem beliebigen Steuerrechner aus; Starten und Abbauen des GPU-Servers je Anbieter in `anleitung/` (RunPod, Google Cloud, Vast.ai, eigener Server).
 - `server/im-container-starten.sh` für Anbieter mit SSH in den Container (Vast.ai) und `server/vast-watchdog.sh`: Die Vast-Instanz löscht sich nach Ablauf selbst (Regel 5).
+- Neue Modelle aufnehmen: `profiles/neu.py` legt ein Profil als Entwurf an und prüft vorab, ob das Modell auf 2 Karten passt. Die Modell-Wache (`profiles/wache.py`, täglich als GitHub Action) meldet Modelle aus `profiles/beobachten.txt` als Issue, sobald sie auf Hugging Face erscheinen.
 - `runpod/` für die REST-API v2: GPU-Typen anzeigen, Pod anlegen, prüfen, Status, löschen. Ohne Network Volume: Der Pod lädt die gepinnte Revision beim Start selbst.
 - Vor jedem Start Kostenschätzung und Bestätigung. Jeder Pod wird mit tatsächlichen Kosten in `results/kosten.csv` verbucht. Die Ausgabengrenze steht im RunPod-Konto (Kartenlimit).
 - Watchdog auf dem Steuerrechner, der den Pod nach `POD_MAX_MINUTES` terminiert.
@@ -86,22 +88,39 @@ Kosten-Schätzungen für GPU-Phasen: 2× RTX PRO 6000 in der Community Cloud, 3,
 
 ## Phase 4 – Erster GPU-Test mit Qwen3.8-27B
 
-**Ergebnis:** Pod-Check und Startprotokoll:
+Auf Google Cloud G4 ([anleitung/google-cloud.md](../anleitung/google-cloud.md)); die Punkte zu Pod, Proxy und Watchdog gelten nur beim Ausweichweg RunPod.
+
+**Ergebnis:** Host-Check und Startprotokoll:
 - `nvidia-smi topo -m` und P2P-Test zwischen beiden Karten
 - System-RAM und `/dev/shm`
 - Richtiges Modell geladen (nicht das vLLM-Standardmodell) und Anfrage ohne API-Key wird abgewiesen
 - Verbindung über direkten TCP-Port statt HTTP-Proxy; eine Anfrage mit über 2 Min. Prefill kommt vollständig an
 - Kaltstartzeit inklusive Download gemessen
-- Watchdog löscht den Pod zuverlässig (terminieren, nicht nur stoppen)
+- Auto-Stopp greift: die G4-VM wird nach `--max-run-duration` gelöscht (bei RunPod: Watchdog terminiert den Pod)
 - Testsuite in Stufe `schnell` einmal komplett durchgelaufen
 
-**Wichtig:** Funktioniert P2P auf dem Host nicht, wird der Pod gelöscht und ein anderer Host gewählt. `NCCL_P2P_DISABLE=1` ist nur Notausgang, weil es Leistung kostet.
+**Wichtig:** Funktioniert P2P auf dem Host nicht, wird die VM gelöscht und neu angelegt (anderer Host bzw. andere Zone). `NCCL_P2P_DISABLE=1` ist nur Notausgang, weil es Leistung kostet.
 
 **Fertig, wenn:** Check-Ergebnis, Startprotokoll und Ergebnisse liegen in `results/`.
 
-## Phase 5 – Qwen3.8-Flash-Next (entfällt)
+## Phase 5 – Qwen3.8-Flash-Next
 
-Am 17.11.2026 aus der Auswahl genommen, siehe [Entscheidungslog](entscheidungen.md). Die Nummer bleibt frei, damit die übrigen Phasen ihre Nummern behalten.
+**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`. Varianten:
+- MTP an/aus
+- KV-Cache BF16 gegen FP8 (FP8 lief auf SM120 laut Community nicht mit dem QSA-Pfad)
+
+**Fertig, wenn:** Ergebnisse und Zusammenfassung in `results/`.
+
+## Phase 5b – Qwen4 (sobald offene Gewichte erscheinen)
+
+**Auslöser:** Issue der Modell-Wache. Stand 17.11.2026 gibt es nur Qwen4-Max als API-Vorschau ohne Gewichte; offene kleinere Modelle sind ohne Datum angekündigt.
+
+**Weg:** je nach Größe wie ein Vorgänger – Einschätzung im [Entscheidungslog](entscheidungen.md):
+- **Qwen4-27B:** passt laut Rechnung locker (≈ 54 GB in BF16); Profil mit `python3 profiles/neu.py qwen4-27b --quelle <repo> --wie qwen38-27b`.
+- **Qwen4-Flash:** Größe offen; Vorläufer ist Qwen3.8-Flash-Next (Architektur „Qwen4Exp“), also `--wie qwen38-flash-next-fp8`. Erst die Vorprüfung von `neu.py` zeigt, ob es in den VRAM passt.
+- **Qwen4-Max:** nicht auf 2 Karten (2,4 Billionen Parameter, Gewichte geschlossen).
+
+**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`, wie Phase 5. Danach in die Rangfolge der README einordnen.
 
 ## Phase 6 – GLM-5.3-Flash
 
@@ -115,7 +134,7 @@ Am 17.11.2026 aus der Auswahl genommen, siehe [Entscheidungslog](entscheidungen.
 
 ## Phase 7 – DeepSeek V4.1 Flash
 
-**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`, mit 500k Kontext als Pflichtpunkt. Nur 2 Karten, Experten teils auf der CPU (Rezept theogravity). Zusätzlich festhalten: CPU, RAM-Bandbreite und NVMe des Hosts, weil das Tempo davon abhängt. Host: Google Cloud G4 (EPYC Turin) oder eigener Server.
+**Ergebnis:** Stufe `schnell`, bei Erfolg `voll`, mit 500k Kontext als Pflichtpunkt. Nur 2 Karten, Experten teils auf der CPU (Rezept theogravity). Zusätzlich festhalten: CPU, RAM-Bandbreite und NVMe des Hosts, weil das Tempo davon abhängt. Host: Google Cloud G4 (EPYC Turin), später der eigene Server.
 
 **Fertig, wenn:** Ergebnisse und Zusammenfassung in `results/`.
 
